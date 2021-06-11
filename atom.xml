@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://shawr00t.github.io</id>
-    <title>「配枪朱丽叶。」</title>
-    <updated>2021-06-11T09:46:47.545Z</updated>
+    <title>「配枪朱丽叶分部」</title>
+    <updated>2021-06-11T09:48:22.278Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://shawr00t.github.io"/>
     <link rel="self" href="https://shawr00t.github.io/atom.xml"/>
     <subtitle>我的博客备用屋^^。</subtitle>
     <logo>https://shawr00t.github.io/images/avatar.png</logo>
     <icon>https://shawr00t.github.io/favicon.ico</icon>
-    <rights>All rights reserved 2021, 「配枪朱丽叶。」</rights>
+    <rights>All rights reserved 2021, 「配枪朱丽叶分部」</rights>
     <entry>
         <title type="html"><![CDATA[你好！世界]]></title>
         <id>https://shawr00t.github.io/ni-hao-shi-jie/</id>
