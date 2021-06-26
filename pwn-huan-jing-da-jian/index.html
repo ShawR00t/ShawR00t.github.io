@@ -153,29 +153,173 @@
     }
 </script>
             <div class="main">
-                <div class="post-wrap archive">
-                    
-                        
-                            <h3>
-                                2021
-                            </h3>
+                <div class="container">
+                    <article class="post-wrap">
+                        <header class="post-header">
+                            <h1 class="post-title">
+                                PWN环境搭建
+                            </h1>
                             
-                                
-                                    <article class="archive-item">
-                                        <a class="archive-item-link" href="https://shawr00t.github.io/pwn-huan-jing-da-jian/">
-                                            PWN环境搭建
-                                        </a><span class="archive-item-date">2021-06-25 </span></article>
+                                <!--en-->
+                                <div class="post-meta en">
+                                    Author:
+                                    <a itemprop="author" rel="author" href="/">
+                                        「配枪朱丽叶 - 分部。」
+                                    </a>
+                                    <span class="post-time">
+                                Date: <a href="#">2021-06-25</a>
+                            </span>
+                                    <span class="post-readtime">Reading Time:<a
+                                    href="#">1.5
+                                    mins</a></span>
+                                    <span class="post-words">words:<a href="#">281</a></span>
                                     
+                                        <span class="post-category">
+                                Category:
+                                
+                                <a href="https://shawr00t.github.io/HdcmhNKsB/">pwn</a>
+                                
+                            </span>
                                         
-                                            
-                </div>
-                <div class="pagination-container">
-                    
-                                            
+                                </div>
+                                
+                        </header>
+                        
+                        <div class="post-content">
+                            <p>参考文档：https://github.com/leungbless/pwnVM-ovf</p>
+<h2 id="0x00-环境">0x00  环境</h2>
+<ul>
+<li>操作系统：Ubuntu 16.04</li>
+</ul>
+<h2 id="0x01-更换源">0x01 更换源</h2>
+<ul>
+<li>cd ~ &amp;&amp; mkdir .pip</li>
+<li>cd ~/.pip &amp;&amp; touch pip.conf</li>
+<li>sudo gedit pip.conf</li>
+</ul>
+<p>然后写入以下内容：</p>
+<pre><code>[global]
+index-url = https://pypi.tuna.tsinghua.edu.cn/simple
+[install]
+trusted-host=mirrors.aliyun.com
+</code></pre>
+<ul>
+<li>sudo apt-get update</li>
+<li>sudo apt-get upgrade</li>
+</ul>
+<h2 id="0x02-安装-gitgdb-和-gdb-multiarch同时安装-binfmt-用来识别文件类型">0x02 安装 git，gdb 和 gdb-multiarch，同时安装 binfmt 用来识别文件类型</h2>
+<ul>
+<li>sudo apt-get update</li>
+<li>sudo apt-get install git gdb gdb-multiarch</li>
+<li>sudo apt-get install &quot;binfmt*&quot;</li>
+</ul>
+<h2 id="0x03-安装gdb的插件pwndbg">0x03 安装gdb的插件pwndbg</h2>
+<ul>
+<li>git clone https://github.com/pwndbg/pwndbg</li>
+<li>cd pwndbg</li>
+<li>./setup.sh</li>
+</ul>
+<h2 id="0x04-安装pwntools">0x04 安装PwnTools</h2>
+<ul>
+<li>sudo apt-get install python2.7 python-pip python-dev git libssl-dev libffi-dev build-essential</li>
+<li>pip install -U setuptools</li>
+<li>pip install --upgrade pip</li>
+<li>pip install --upgrade pwntools<br>
+这里如果出现报错，尝试：</li>
+<li>wget https://bootstrap.pypa.io/pip/2.7/get-pip.py</li>
+<li>python get-pip.py</li>
+<li>pip install --upgrade pwntools</li>
+</ul>
+<h2 id="0x05-安装ssh">0X05 安装ssh</h2>
+<ul>
+<li>sudo apt-get install ssh</li>
+</ul>
+<h2 id="0x06-安装ropgadget工具">0x06 安装ROPgadget工具</h2>
+<ul>
+<li>pip install ropgadget</li>
+</ul>
+<h2 id="0x07-安装qemu">0x07 安装qemu</h2>
+<ul>
+<li>sudo apt-get install qemu-user</li>
+</ul>
+<h2 id="0x08-安装libcsearcher用处-用来泄露libc库中函数的偏移的库">0x08 安装LibcSearcher(用处: 用来泄露libc库中函数的偏移的库)</h2>
+<ul>
+<li>git clone https://github.com.cnpmjs.org/lieanu/LibcSearcher.git</li>
+<li>cd LibcSearcher</li>
+<li>sudo python setup.py develop</li>
+</ul>
+<h2 id="0x09-安装32位程序依赖的环境">0x09 安装32位程序依赖的环境</h2>
+<ul>
+<li>sudo dpkg --add-architecture i386</li>
+<li>sudo apt-get -y install lib32z1 lib32ncurses5</li>
+</ul>
+
+                        </div>
+                        
+                                
+                                    
+                                        <!--en-->
+                                        <section class="post-copyright en">
+                                            <p class="copyright-item">
+                                                <span>Author:</span>
+                                                <span>「配枪朱丽叶 - 分部。」</span>
+                                            </p>
+
+                                            <p class="copyright-item">
+                                                <span>Permalink:</span>
+                                                <span><a href="https://shawr00t.github.io/pwn-huan-jing-da-jian/">https://shawr00t.github.io/pwn-huan-jing-da-jian/</a></span>
+                                            </p>
+
+                                            <p class="copyright-item">
+                                                <span>License:</span>
+                                                <span>MIT License</span>
+                                            </p>
+                                        </section>
+                                        
+                                                
                                                     
-                                                            
+                                                        <!-- Share-->
+                                                        <span style="margin-right:15px">
+                                                    <i class="post-share"></i>
+                                                    <span>Share:</span>
+                                                        <a title="QR Code" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://shawr00t.github.io/pwn-huan-jing-da-jian/"><i class="fa fa-qrcode"></i></a>
+                                                        <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://shawr00t.github.io/pwn-huan-jing-da-jian/&sharesource=qzone&title=PWN环境搭建&pics=https://shawr00t.github.io/images/avatar.png?v=1624677991246&summary="><i class="fa fa-qq"></i></a>
+                                                        <a title="Weibo" target="_blank" href="https://service.weibo.com/share/share.php?url=https://shawr00t.github.io/pwn-huan-jing-da-jian/&sharesource=weibo&title=PWN环境搭建 + " - " + &pic="https://shawr00t.github.io/images/avatar.png?v=1624677991246 "><i class="fa fa-weibo "></i></a>
+                                                        
+                                                                </span>
+                                                                <!--en-->
+                                                                <section class="post-tags en ">
+                                                                    <div>
+                                                                        <span>Tag(s):</span>
+                                                                        <span class="tag ">
+                        
+                        
+                        <a href="https://shawr00t.github.io/HdcmhNKsB/">#
+                                                pwn
+                                                    </a>
+                                                    
+                                                        
+                                                            </span>
+                                                                    </div>
+                                                                    <div>
+                                                                        <a href="javascript:window.history.back();">back</a>
+                                                                        <span>&dot;</span>
+                                                                        <a href="#">home</a>
+                                                                    </div>
+                                                                </section>
+                                                                
+                                                                                <!---->
+                                                                                <section class="post-nav">
+                                                                                    
+                                                                                            
+                                                                                </section>
+                    </article>
                 </div>
+                
+                                            
             </div>
+    </div>
+    </div>
     </div>
     
         <footer id="footer" class="footer">
@@ -231,5 +375,8 @@
                 
         </div>
 </body>
+<script>
+    scroll();
+</script>
 
 </html>
