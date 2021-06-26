@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://shawr00t.github.io</id>
     <title>「配枪朱丽叶 - 分部。」</title>
-    <updated>2021-06-26T04:17:05.635Z</updated>
+    <updated>2021-06-26T06:36:18.912Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://shawr00t.github.io"/>
     <link rel="self" href="https://shawr00t.github.io/atom.xml"/>
@@ -10,6 +10,13 @@
     <logo>https://shawr00t.github.io/images/avatar.png</logo>
     <icon>https://shawr00t.github.io/favicon.ico</icon>
     <rights>All rights reserved 2021, 「配枪朱丽叶 - 分部。」</rights>
+    <entry>
+        <title type="html"><![CDATA[[攻防世界]hello_pwn]]></title>
+        <id>https://shawr00t.github.io/gong-fang-shi-jie-hello_pwn/</id>
+        <link href="https://shawr00t.github.io/gong-fang-shi-jie-hello_pwn/">
+        </link>
+        <updated>2021-06-26T04:17:16.000Z</updated>
+    </entry>
     <entry>
         <title type="html"><![CDATA[PWN环境搭建]]></title>
         <id>https://shawr00t.github.io/pwn-huan-jing-da-jian/</id>
