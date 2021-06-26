@@ -76,7 +76,7 @@
                         <input id="switch_default" type="checkbox" class="switch_default">
                         <label for="switch_default" class="toggleBtn"></label>
             </div>
-            <form id="gridea-search-form" data-update="1624689750249" action="/search/index.html">
+            <form id="gridea-search-form" data-update="1624689799881" action="/search/index.html">
                 <input class="search-input" autocomplete="off" spellcheck="false" name="q" autofocus="true" placeholder="Search...">
             </form>
         </div>
@@ -95,7 +95,7 @@
                         <!--zh-->
                         <a id="mobile-toggle-theme-zh" class="a zh">&nbsp;&#x6697;&#x9ED1;</a>
                     </div>
-                    <form id="gridea-search-form" data-update="1624689750249" action="/search/index.html">
+                    <form id="gridea-search-form" data-update="1624689799881" action="/search/index.html">
                         <input class="search-input" autocomplete="off" spellcheck="false" name="q" autofocus="true" placeholder="Search...">
                     </form>
                     <!--en-->
@@ -181,20 +181,16 @@
                         <div class="post-content">
                             <p>checksec检查程序保护机制：<br>
 <img src="https://imgpp.com/images/2021/06/26/2021-06-26_123723.png" alt="2021-06-26_123723.png" loading="lazy"></p>
-<blockquote>
-<blockquote>
 <p>checksec可以检查程序保护机制，从而查看题目开启了哪些保护机制，有助于对题目的初步分析。</p>
-</blockquote>
-</blockquote>
 <ul>
-<li><strong>Arch</strong>：程序位数(查看是多少位的程序，比如32或64位)，也可以查看是哪个微处理器，比如i386为32位微处理器，amd64为64位微处理器(x86架构的延伸产品，称为x86-64，后改名为AMD64)；<br>
-把题目文件拖进IDA中查看伪代码：</li>
+<li><strong>Arch</strong>：程序位数(查看是多少位的程序，比如32或64位)，也可以查看是哪个微处理器，比如i386为32位微处理器，amd64为64位微处理器(x86架构的延伸产品，称为x86-64，后改名为AMD64)；</li>
 <li><strong>RELRO</strong>：设置符号重定向表格为只读或在程序启动时就解析并绑定所有动态符号，从而减少对GOT(Global Offset Table)攻击。RELEO为&quot;Partial RELRO&quot;，说明我们对GOT表有写权限。</li>
 <li><strong>Stack</strong>：栈溢出监测，查看程序是否开启了Canary防护(一种对函数栈的监测保护：还没等到栈溢出，先返回canary word，从而监测栈溢出情况)。</li>
 <li><strong>NX</strong> ：No-eXecute(不可执行)，相等于windows的DEP(数据执行保护)，就是将攻击者构造的payload和shellcode(一般为系统远程执行命令)所在的内存页标识为不可执行，当攻击代码想要以数据代码伪装成可执行代码时，就会被检测到，从而使CPU抛出异常，从而不执行恶意指令。</li>
 <li><strong>PIE</strong>：内存地址空间分布随机化(ASLR:address space layout randomization)<br>
 根据图片结果可以得知，该题是一个<code>64</code>位的程序，没有开启<code>RELRO</code>，没有开启<code>栈溢出检测</code>，开启了<code>NX</code>，没有开启<code>内存地址空间分布随机化</code>。</li>
 </ul>
+<p>把题目文件拖进IDA中查看伪代码：</p>
 <pre><code class="language-c">__int64 __fastcall main(__int64 a1, char **a2, char **a3)
 {
   alarm(0x3Cu);
@@ -258,8 +254,8 @@ p.interactive()
                                                     <i class="post-share"></i>
                                                     <span>Share:</span>
                                                         <a title="QR Code" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://shawr00t.github.io/gong-fang-shi-jie-hello_pwn/"><i class="fa fa-qrcode"></i></a>
-                                                        <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://shawr00t.github.io/gong-fang-shi-jie-hello_pwn/&sharesource=qzone&title=[攻防世界]hello_pwn&pics=https://shawr00t.github.io/images/avatar.png?v=1624689750249&summary="><i class="fa fa-qq"></i></a>
-                                                        <a title="Weibo" target="_blank" href="https://service.weibo.com/share/share.php?url=https://shawr00t.github.io/gong-fang-shi-jie-hello_pwn/&sharesource=weibo&title=[攻防世界]hello_pwn + " - " + &pic="https://shawr00t.github.io/images/avatar.png?v=1624689750249 "><i class="fa fa-weibo "></i></a>
+                                                        <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://shawr00t.github.io/gong-fang-shi-jie-hello_pwn/&sharesource=qzone&title=[攻防世界]hello_pwn&pics=https://shawr00t.github.io/images/avatar.png?v=1624689799881&summary="><i class="fa fa-qq"></i></a>
+                                                        <a title="Weibo" target="_blank" href="https://service.weibo.com/share/share.php?url=https://shawr00t.github.io/gong-fang-shi-jie-hello_pwn/&sharesource=weibo&title=[攻防世界]hello_pwn + " - " + &pic="https://shawr00t.github.io/images/avatar.png?v=1624689799881 "><i class="fa fa-weibo "></i></a>
                                                         
                                                                 </span>
                                                                 <!--en-->
@@ -341,7 +337,7 @@ p.interactive()
                     CheckVersion();
                     
                     var newDate = new Date();
-                    newDate.setTime(1624689750249);
+                    newDate.setTime(1624689799881);
                     console.log(" Blog Update Time: " + newDate.toLocaleDateString());
                     console.log("\n %c \u26a1Theme:Chic Author's Blog:https://blog.itjoker.cn  Write By ITJoker  \n\n", "color: #ffffff; background: rgba(49, 49, 49, 0.85); padding:5px 0;border-radius:5px;");
                 </script>
