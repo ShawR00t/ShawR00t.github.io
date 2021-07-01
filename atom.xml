@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://shawr00t.github.io</id>
     <title>「配枪朱丽叶 - 分部。」</title>
-    <updated>2021-07-01T03:22:07.839Z</updated>
+    <updated>2021-07-01T14:58:07.213Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://shawr00t.github.io"/>
     <link rel="self" href="https://shawr00t.github.io/atom.xml"/>
@@ -10,6 +10,13 @@
     <logo>https://shawr00t.github.io/images/avatar.png</logo>
     <icon>https://shawr00t.github.io/favicon.ico</icon>
     <rights>All rights reserved 2021, 「配枪朱丽叶 - 分部。」</rights>
+    <entry>
+        <title type="html"><![CDATA[[BUUCTF]rip]]></title>
+        <id>https://shawr00t.github.io/buuctfrip/</id>
+        <link href="https://shawr00t.github.io/buuctfrip/">
+        </link>
+        <updated>2021-07-01T13:59:48.000Z</updated>
+    </entry>
     <entry>
         <title type="html"><![CDATA[[CTFhub]ret2text]]></title>
         <id>https://shawr00t.github.io/ctfhubret2text/</id>

