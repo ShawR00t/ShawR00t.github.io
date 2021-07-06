@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://shawr00t.github.io</id>
     <title>「配枪朱丽叶 - 分部。」</title>
-    <updated>2021-07-05T14:30:08.518Z</updated>
+    <updated>2021-07-06T06:08:22.957Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://shawr00t.github.io"/>
     <link rel="self" href="https://shawr00t.github.io/atom.xml"/>
@@ -10,6 +10,13 @@
     <logo>https://shawr00t.github.io/images/avatar.png</logo>
     <icon>https://shawr00t.github.io/favicon.ico</icon>
     <rights>All rights reserved 2021, 「配枪朱丽叶 - 分部。」</rights>
+    <entry>
+        <title type="html"><![CDATA[[CTFshow]pwn03]]></title>
+        <id>https://shawr00t.github.io/ctfshowpwn03/</id>
+        <link href="https://shawr00t.github.io/ctfshowpwn03/">
+        </link>
+        <updated>2021-07-06T01:17:18.000Z</updated>
+    </entry>
     <entry>
         <title type="html"><![CDATA[[CTFshow]01栈溢出之ret2text]]></title>
         <id>https://shawr00t.github.io/ctfshow01-zhan-yi-chu-zhi-ret2text/</id>
@@ -72,12 +79,5 @@
         <link href="https://shawr00t.github.io/pwnablekrfd/">
         </link>
         <updated>2021-06-28T14:46:00.000Z</updated>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[[BugKu]overflowPWN]]></title>
-        <id>https://shawr00t.github.io/bugkuoverflowpwn/</id>
-        <link href="https://shawr00t.github.io/bugkuoverflowpwn/">
-        </link>
-        <updated>2021-06-28T14:03:04.000Z</updated>
     </entry>
 </feed>
