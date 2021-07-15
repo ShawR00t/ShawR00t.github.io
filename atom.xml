@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://shawr00t.github.io</id>
     <title>「配枪朱丽叶 - 分部。」</title>
-    <updated>2021-07-06T09:25:39.883Z</updated>
+    <updated>2021-07-15T07:14:45.361Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://shawr00t.github.io"/>
     <link rel="self" href="https://shawr00t.github.io/atom.xml"/>
@@ -10,6 +10,27 @@
     <logo>https://shawr00t.github.io/images/avatar.png</logo>
     <icon>https://shawr00t.github.io/favicon.ico</icon>
     <rights>All rights reserved 2021, 「配枪朱丽叶 - 分部。」</rights>
+    <entry>
+        <title type="html"><![CDATA[[PWN]ret2syscall 学习笔记]]></title>
+        <id>https://shawr00t.github.io/pwnret2syscall-xue-xi-bi-ji/</id>
+        <link href="https://shawr00t.github.io/pwnret2syscall-xue-xi-bi-ji/">
+        </link>
+        <updated>2021-07-15T03:10:51.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[[BUUCTF]ciscn_2019_n_1 ]]></title>
+        <id>https://shawr00t.github.io/buuctfciscn_2019_n_1/</id>
+        <link href="https://shawr00t.github.io/buuctfciscn_2019_n_1/">
+        </link>
+        <updated>2021-07-11T04:02:48.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[[XMAN]pwn level1   ]]></title>
+        <id>https://shawr00t.github.io/xmanpwn-level1/</id>
+        <link href="https://shawr00t.github.io/xmanpwn-level1/">
+        </link>
+        <updated>2021-07-07T14:34:29.000Z</updated>
+    </entry>
     <entry>
         <title type="html"><![CDATA[[PWN]ret2libc学习笔记]]></title>
         <id>https://shawr00t.github.io/ctfshowpwn03/</id>
@@ -58,26 +79,5 @@
         <link href="https://shawr00t.github.io/buuctfrip/">
         </link>
         <updated>2021-07-01T13:59:48.000Z</updated>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[[CTFhub]ret2text]]></title>
-        <id>https://shawr00t.github.io/ctfhubret2text/</id>
-        <link href="https://shawr00t.github.io/ctfhubret2text/">
-        </link>
-        <updated>2021-07-01T01:29:38.000Z</updated>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[[pwnable.kr]collision]]></title>
-        <id>https://shawr00t.github.io/pwnablekrcollision/</id>
-        <link href="https://shawr00t.github.io/pwnablekrcollision/">
-        </link>
-        <updated>2021-06-29T14:01:04.000Z</updated>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[[pwnable.kr]fd]]></title>
-        <id>https://shawr00t.github.io/pwnablekrfd/</id>
-        <link href="https://shawr00t.github.io/pwnablekrfd/">
-        </link>
-        <updated>2021-06-28T14:46:00.000Z</updated>
     </entry>
 </feed>

